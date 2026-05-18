@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.5</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.6</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -35,7 +35,11 @@
         .table-container { background: white; border-radius: 12px; display: flex; flex-direction: column; min-height: 0; flex: 1; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%); color: white; position: sticky; top: 0; }
-        th { padding: 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+        th { padding: 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; user-select: none; }
+        th:hover { background: linear-gradient(90deg, #0a4272aa 0%, #1a5a9eaa 100%); }
+        th.sorted { color: var(--gold); }
+        th.sorted::after { content: ' ▼'; font-size: 0.7rem; }
+        th.sorted.asc::after { content: ' ▲'; }
         tbody { overflow-y: auto; flex: 1; }
         tbody tr { border-bottom: 1px solid var(--gray-200); cursor: pointer; transition: all 0.2s ease; }
         tbody tr:hover { background: var(--gray-50); }
@@ -109,7 +113,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.5</h1>
+                <h1>📋 Vahinkorekisteri v6.6</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -144,7 +148,7 @@
                 </div>
                 <div id="listTab" class="table-container">
                     <table>
-                        <thead><tr><th>Vahinkopäivä</th><th>Kohde</th><th>Tyyppi</th><th>Tila</th><th>Vahinkotunnus</th></tr></thead>
+                        <thead><tr><th onclick="sortTable('vahinkopäivä')">Vahinkopäivä</th><th onclick="sortTable('kohde')">Kohde</th><th onclick="sortTable('tyyppi')">Tyyppi</th><th onclick="sortTable('käsittelyn_tila')">Tila</th><th onclick="sortTable('vahinkotunnus')">Vahinkotunnus</th></tr></thead>
                         <tbody id="tableBody"><tr><td colspan="5" style="text-align: center; padding: 3rem;">Ladataan...</td></tr></tbody>
                     </table>
                 </div>
@@ -184,7 +188,7 @@
         </div>
     </div>
 
-    <div class="version">v6.5</div>
+    <div class="version">v6.6</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -192,6 +196,7 @@
         let db = null;
         const DB_NAME = 'VahinkorekisteriDB';
         const STORE_NAME = 'vahingot';
+        let currentSort = { field: 'vahinkopäivä', asc: false };
 
         function initIndexedDB(){
             return new Promise((resolve, reject)=>{
@@ -313,8 +318,49 @@
             }
         }
 
+        function sortTable(field){
+            if(currentSort.field===field){
+                currentSort.asc=!currentSort.asc;
+            } else {
+                currentSort.field=field;
+                currentSort.asc=false;
+            }
+            renderTable();
+        }
+
         function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
-        function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value,filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila))).sort((a,b)=>dateToNum(b.vahinkopäivä)-dateToNum(a.vahinkopäivä));t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
+
+        function renderTable(){
+            const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value;
+            let filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila)));
+            
+            // Sorttaus
+            filtered.sort((a,b)=>{
+                let aVal=a[currentSort.field]||'';
+                let bVal=b[currentSort.field]||'';
+                if(currentSort.field==='vahinkopäivä'){
+                    aVal=dateToNum(aVal);
+                    bVal=dateToNum(bVal);
+                }
+                if(currentSort.asc){
+                    return aVal>bVal?1:-1;
+                } else {
+                    return aVal<bVal?1:-1;
+                }
+            });
+
+            // Otsakkeiden merkinnät
+            document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted','asc'));
+            const thHeaders=['Vahinkopäivä','Kohde','Tyyppi','Tila','Vahinkotunnus'];
+            const fieldNames=['vahinkopäivä','kohde','tyyppi','käsittelyn_tila','vahinkotunnus'];
+            const activeIdx=fieldNames.indexOf(currentSort.field);
+            if(activeIdx>=0){
+                document.querySelectorAll('th')[activeIdx].classList.add('sorted');
+                if(currentSort.asc)document.querySelectorAll('th')[activeIdx].classList.add('asc');
+            }
+
+            t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';
+        }
 
         function updateStats(){const k=vahingot.filter(v=>v.käsittelyn_tila==='Käsitelty').length,ks=vahingot.filter(v=>v.käsittelyn_tila==='Käsittelyssä').length,a=vahingot.filter(v=>v.käsittelyn_tila==='Arkistoitu').length,o=vahingot.filter(v=>!v.käsittelyn_tila).length;document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Yhteensä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${vahingot.length}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsitellyt</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${k}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsittelyssä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${ks}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Arkistoidut</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${a}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Avoimet</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${o}</div></div>`;}
 
