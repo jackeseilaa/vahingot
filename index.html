@@ -3,294 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.13</title>
+    <title>Vahinkorekisteri v7</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
-        html, body { height: 100%; font-family: 'Outfit', -apple-system, sans-serif; background: linear-gradient(135deg, var(--gray-50) 0%, #f0f4f8 100%); color: var(--text-primary); }
-        body { display: flex; flex-direction: column; }
-        .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); }
-        .login-card { background: white; border-radius: 12px; padding: 3rem; box-shadow: 0 20px 60px rgba(10,66,114,0.3); max-width: 400px; text-align: center; }
-        .login-card h1 { color: var(--navy); margin-bottom: 0.5rem; font-size: 1.8rem; }
-        .login-card p { color: var(--text-secondary); margin-bottom: 2rem; }
-        .pin-input { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
-        .pin-digit { width: 50px; height: 50px; font-size: 2rem; text-align: center; border: 2px solid var(--gray-300); border-radius: 8px; font-weight: 700; }
-        .pin-digit:focus { outline: none; border-color: var(--gold); background: #fffbf0; }
-        .login-btn { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; border: none; padding: 0.75rem 2rem; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 1rem; }
-        .login-btn:hover { transform: translateY(-2px); }
-        .forgot-pin { color: var(--gold); text-decoration: none; font-size: 0.9rem; }
-        .error-msg { color: #dc3545; margin-bottom: 1rem; font-weight: 600; }
-        .session-warning { position: fixed; top: 1rem; right: 1rem; background: #ff9800; color: white; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
-        header { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; padding: 1.5rem; border-bottom: 3px solid var(--gold); flex-shrink: 0; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        header h1 { font-size: 1.8rem; font-weight: 700; }
-        .logout-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
-        .header-filters { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .header-filter { display: flex; flex-direction: column; gap: 0.25rem; }
-        .header-filter label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.9; }
-        .header-filter select { padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 0.85rem; min-width: 120px; }
-        .header-filter select option { color: var(--text-primary); background: white; }
-        main { flex: 1; display: flex; gap: 1.5rem; padding: 1.5rem; width: 100%; min-height: 0; }
-        aside { width: 320px; background: white; border-radius: 12px; padding: 1.5rem; overflow-y: auto; border-left: 4px solid var(--gold); flex-shrink: 0; }
-        aside h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--navy); font-weight: 600; }
-        .content { flex: 1; display: flex; flex-direction: column; gap: 1.5rem; min-height: 0; }
-        .tabs { display: flex; gap: 0.5rem; background: white; padding: 0.5rem; flex-shrink: 0; }
-        .tab-btn { padding: 0.8rem 1.2rem; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); border-bottom: 3px solid transparent; font-family: 'Outfit', sans-serif; }
-        .tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
-        .table-container { background: white; border-radius: 12px; display: flex; flex-direction: column; min-height: 0; flex: 1; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%); color: white; position: sticky; top: 0; }
-        th { padding: 1rem; text-align: left; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; user-select: none; }
-        th:hover { background: linear-gradient(90deg, #0a4272aa 0%, #1a5a9eaa 100%); }
-        th.sorted { color: var(--gold); }
-        th.sorted::after { content: ' ▼'; font-size: 0.7rem; }
-        th.sorted.asc::after { content: ' ▲'; }
-        tbody { overflow-y: auto; flex: 1; }
-        tbody tr { border-bottom: 1px solid var(--gray-200); cursor: pointer; transition: all 0.2s ease; }
-        tbody tr:hover { background: var(--gray-50); }
-        td { padding: 0.9rem 1rem; font-size: 0.9rem; }
-        .badge { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .badge.käsitelty { background: #d1fae5; color: #065f46; }
-        .badge.käsittelyssä { background: #fef3c7; color: #92400e; }
-        .badge.arkistoitu { background: #e5e7eb; color: #374151; }
-        .badge.avoin { background: #fee2e2; color: #991b1b; }
-        .search-box { position: relative; margin-bottom: 1rem; }
-        .search-box input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--gray-300); border-radius: 8px; }
-        select { width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; margin-bottom: 1rem; }
-        button { font-family: 'Outfit', sans-serif; border: none; border-radius: 6px; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-transform: uppercase; }
-        .btn-primary { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; width: 100%; margin-bottom: 0.75rem; }
-        .btn-secondary { background: var(--gray-600); color: white; width: 100%; margin-bottom: 0.75rem; }
-        .btn-danger { background: #dc3545; color: white; width: 100%; margin-bottom: 0.75rem; }
-        .btn-success { background: #28a745; color: white; width: 100%; margin-bottom: 0.75rem; }
-        .stat-card { background: white; border-radius: 12px; padding: 1.2rem; border-top: 4px solid var(--gold); }
-        .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--navy); }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: 12px; padding: 2rem; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        .modal-content h3 { color: var(--navy); margin-bottom: 1.5rem; font-size: 1.5rem; }
-        .modal-field { margin-bottom: 1.5rem; }
-        .modal-field label { display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; }
-        .modal-field input, .modal-field textarea, .modal-field select { width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: 'Outfit', sans-serif; }
-        .modal-field textarea { resize: vertical; min-height: 80px; }
-        .muistiinpano { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 6px; }
-        .muistiinpano-btn { background: #dc3545; color: white; padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; margin-bottom: 0; }
-        .liite-item { background: var(--gray-50); padding: 1rem; margin-bottom: 0.75rem; border-radius: 6px; display: flex; gap: 1rem; align-items: flex-start; }
-        .liite-preview { width: 80px; height: 80px; background: white; border: 1px solid var(--gray-300); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .liite-preview img { max-width: 100%; max-height: 100%; object-fit: cover; }
-        .liite-preview.teksti { background: #f0f4f8; color: var(--navy); font-size: 0.7rem; padding: 0.5rem; text-align: center; }
-        .liite-info { flex: 1; }
-        .liite-name { font-weight: 600; color: var(--navy); margin-bottom: 0.25rem; word-break: break-word; }
-        .liite-preview-text { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; max-height: 60px; overflow: hidden; }
-        .file-input { display: none; }
-        .version { position: fixed; bottom: 1rem; right: 1rem; font-size: 0.75rem; color: var(--text-secondary); background: white; padding: 0.5rem 1rem; border-radius: 20px; }
-        .preview-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; }
-        .preview-modal.active { display: flex; }
-        .preview-content { background: white; border-radius: 12px; padding: 2rem; max-width: 90vw; max-height: 90vh; overflow: auto; }
-        .preview-content img { max-width: 100%; height: auto; }
-        .preview-content pre { background: var(--gray-50); padding: 1rem; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
-        .storage-info { background: #e7f3ff; border-left: 4px solid var(--navy); padding: 1rem; margin-bottom: 1rem; border-radius: 6px; font-size: 0.9rem; }
-        .pin-verify-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1001; align-items: center; justify-content: center; }
-        .pin-verify-modal.active { display: flex; }
-        .pin-verify-content { background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
-        .pin-verify-content h3 { color: var(--navy); margin-bottom: 1.5rem; }
-        .verify-pin-input { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
-        .verify-pin-digit { width: 50px; height: 50px; font-size: 2rem; text-align: center; border: 2px solid var(--gray-300); border-radius: 8px; font-weight: 700; }
-        .verify-pin-digit:focus { outline: none; border-color: var(--gold); background: #fffbf0; }
-        @media (max-width: 1024px) { main { flex-direction: column; } aside { width: 100%; } .header-filters { gap: 0.5rem; } .header-filter select { min-width: 100px; } }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: #0a4272; color: white; padding: 20px; margin: -20px -20px 20px -20px; }
+        h1 { margin: 0; }
+        .version { font-size: 0.9rem; opacity: 0.8; }
+        table { width: 100%; background: white; border-collapse: collapse; margin: 20px 0; }
+        th { background: #0a4272; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f9f9f9; }
+        button { padding: 8px 16px; background: #0a4272; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1a5a9e; }
+        .success { background: #28a745; }
+        .success:hover { background: #218838; }
+        .danger { background: #dc3545; }
+        .danger:hover { background: #c82333; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .liite { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .liite img { max-width: 100%; height: auto; }
+        .section { margin: 20px 0; }
     </style>
 </head>
 <body>
-    <div id="loginScreen" class="login-screen">
-        <div class="login-card">
-            <h1>🔐 Vahinkorekisteri</h1>
-            <p>PIN-koodi vaaditaan pääsyyn (GDPR-suojattu)</p>
-            <div id="errorMsg" class="error-msg" style="display: none;"></div>
-            <div class="pin-input" id="pinInput"></div>
-            <button class="login-btn" onclick="loginWithPin()">Kirjaudu</button>
-            <a href="#" class="forgot-pin" onclick="forgotPin(event)">Unohdit PIN:in?</a>
-        </div>
-    </div>
-
-    <div id="mainApp" style="display: none; flex: 1; flex-direction: column;">
-        <div id="sessionWarning" class="session-warning" style="display: none;">
-            ⚠️ Istunto päättyy 2 minuutissa. Klikkaa jatkaksesi.
-        </div>
-
+    <div class="container">
         <header>
-            <div class="header-top">
-                <div>
-                    <h1>📋 Vahinkorekisteri v6.13</h1>
-                    <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
-                </div>
-                <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
-            </div>
-            <div class="header-filters">
-                <div class="header-filter">
-                    <label>Kohde</label>
-                    <select id="headerKohdeFilter" onchange="renderTable()"><option value="">Kaikki</option></select>
-                </div>
-                <div class="header-filter">
-                    <label>Tyyppi</label>
-                    <select id="headerTyyppiFilter" onchange="renderTable()"><option value="">Kaikki</option><option value="Ajoneuvovahinko">Ajoneuvovahinko</option><option value="Liikennevahinko">Liikennevahinko</option><option value="Omaisuusvahinko">Omaisuusvahinko</option></select>
-                </div>
-                <div class="header-filter">
-                    <label>Tila</label>
-                    <select id="headerTilaFilter" onchange="renderTable()"><option value="">Kaikki</option><option value="Käsitelty">Käsitelty</option><option value="Käsittelyssä">Käsittelyssä</option><option value="Arkistoitu">Arkistoitu</option><option value="avoin">Avoin</option></select>
-                </div>
-            </div>
+            <h1>📋 Vahinkorekisteri</h1>
+            <p class="version">v7 - Yksinkertainen & Toimiva</p>
         </header>
 
-        <main>
-            <aside>
-                <h2>Suodattimet & Synkronointi</h2>
-                <div class="storage-info">
-                    ☁️ <strong>TÄRKEÄ:</strong> Vie JSON iCloud:iin, lataa se uudelle laitteelle synkronointia varten!
-                </div>
-                <div class="search-box"><input type="text" id="searchInput" placeholder="Hae kohteella..."></div>
-                <div id="asideStats" style="margin-top: 1.5rem;"></div>
-                <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
-                <button class="btn-success" onclick="syncToICloud()">☁️ VIE iCloud (JSON)</button>
-                <button class="btn-primary" onclick="exportExcel()">📊 Vie Excel</button>
-                <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ LATAA iCloud:sta</button>
-                <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
-                <button class="btn-danger" onclick="verifyPINForDelete()">🗑 Poista kaikki (GDPR)</button>
-            </aside>
+        <div class="section">
+            <h2>Hallinta</h2>
+            <button onclick="addVahinko()" class="success">+ Uusi vahinko</button>
+            <button onclick="exportJSON()" class="success">💾 Vie JSON iCloud:iin</button>
+            <button onclick="document.getElementById('importFile').click()" class="success">📂 Lataa JSON</button>
+            <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importJSON()">
+            <button onclick="exportExcel()" class="success">📊 Vie Excel</button>
+            <button onclick="clearAll()" class="danger">🗑️ Tyhjennä kaikki</button>
+        </div>
 
-            <div class="content">
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('list')">Kooste</button>
-                    <button class="tab-btn" onclick="switchTab('summary')">Yhteenveto</button>
-                    <button class="tab-btn" onclick="switchTab('audit')">Audit Log</button>
-                </div>
-                <div id="listTab" class="table-container">
-                    <table>
-                        <thead><tr><th onclick="sortTable('vahinkopäivä')">Vahinkopäivä</th><th onclick="sortTable('kohde')">Kohde</th><th onclick="sortTable('tyyppi')">Tyyppi</th><th onclick="sortTable('käsittelyn_tila')">Tila</th><th onclick="sortTable('vahinkotunnus')">Vahinkotunnus</th></tr></thead>
-                        <tbody id="tableBody"><tr><td colspan="5" style="text-align: center; padding: 3rem;">Ladataan...</td></tr></tbody>
-                    </table>
-                </div>
-                <div id="summaryTab" style="display: none;"><div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"></div></div>
-                <div id="auditTab" style="display: none; background: white; border-radius: 12px; padding: 1.5rem; overflow-y: auto;"><div id="auditLog"></div></div>
-            </div>
-        </main>
+        <div class="section">
+            <h2>Vahingot</h2>
+            <input type="text" id="searchBox" placeholder="Hae kohteella..." onkeyup="filterTable()">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Päivä</th>
+                        <th>Kohde</th>
+                        <th>Tyyppi</th>
+                        <th>Tila</th>
+                        <th>Tunnus</th>
+                        <th>Liitteet</th>
+                        <th>Toiminnot</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle"></h3>
-            <div class="modal-field"><label>Vahinkopäivä</label><input type="date" id="modalPäivä" onchange="saveField('vahinkopäivä', this.value)"></div>
-            <div class="modal-field"><label>Kohde</label><input type="text" id="modalKohde" onchange="saveField('kohde', this.value)"></div>
-            <div class="modal-field"><label>Tyyppi</label><select id="modalTyyppi" onchange="saveField('tyyppi', this.value)"><option>Ajoneuvovahinko</option><option>Liikennevahinko</option><option>Omaisuusvahinko</option></select></div>
-            <div class="modal-field"><label>Käsittelyn tila</label><select id="modalTila" onchange="saveField('käsittelyn_tila', this.value)"><option value="">Avoin</option><option>Käsittelyssä</option><option>Käsitelty</option><option>Arkistoitu</option></select></div>
-            <div class="modal-field"><label>Vahinkotunnus</label><input type="text" id="modalTunnus" onchange="saveField('vahinkotunnus', this.value)"></div>
-            <div class="modal-field"><label>Muistiinpanot</label><div id="muistiinpanot"></div><textarea id="uusiMuistiinpano" placeholder="Lisää uusi muistiinpano..."></textarea><button onclick="lisääMuistiinpano()" style="margin-top: 0.5rem; width: 100%;">Lisää muistiinpano</button></div>
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);"><label style="font-weight: bold; color: var(--navy); display: block; margin-bottom: 1rem;">Liitteet</label><div id="liitteet"></div><button class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;" onclick="openFileDialog()">📁 Lisää liitteet</button><button onclick="pasteText()" class="btn-secondary" style="width: 100%;">📋 Liitä teksti</button><input type="file" id="multiFileInput" multiple style="display:none;"></div>
-            <div style="margin-top: 2rem;"><button onclick="closeModal()" class="btn-secondary">Sulje</button></div>
+            <h2 id="modalTitle"></h2>
+            <div>
+                <label>Päivä:</label>
+                <input type="date" id="day">
+                <label>Kohde:</label>
+                <input type="text" id="target">
+                <label>Tyyppi:</label>
+                <select id="type" style="width:100%; padding:8px;">
+                    <option>Ajoneuvovahinko</option>
+                    <option>Liikennevahinko</option>
+                    <option>Omaisuusvahinko</option>
+                </select>
+                <label>Tila:</label>
+                <select id="status" style="width:100%; padding:8px;">
+                    <option value="">Avoin</option>
+                    <option>Käsittelyssä</option>
+                    <option>Käsitelty</option>
+                    <option>Arkistoitu</option>
+                </select>
+                <label>Tunnus:</label>
+                <input type="text" id="reference">
+                <label>Muistiinpanot:</label>
+                <textarea id="notes"></textarea>
+                <label>Liitteet:</label>
+                <div id="attachmentsList"></div>
+                <button onclick="document.getElementById('fileInput').click()" class="success">📁 Lisää kuvia</button>
+                <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFiles()">
+                <br><br>
+                <button onclick="saveVahinko()" class="success">💾 Tallenna</button>
+                <button onclick="closeModal()">Peruuta</button>
+            </div>
         </div>
     </div>
-
-    <div id="previewModal" class="preview-modal">
-        <div class="preview-content" id="previewContent"></div>
-        <button onclick="closePreview()" style="position: absolute; top: 1rem; right: 1rem; background: white; color: var(--navy); padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer;">✕</button>
-    </div>
-
-    <div id="pinVerifyModal" class="pin-verify-modal">
-        <div class="pin-verify-content">
-            <h3>🔐 Vahvista PIN-koodi</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Syötä PIN poistaaksesi kaikki tiedot:</p>
-            <div class="verify-pin-input" id="verifyPinInput"></div>
-            <button class="btn-danger" onclick="confirmDelete()" style="margin-bottom: 0.75rem;">Poista kaikki tiedot</button>
-            <button class="btn-secondary" onclick="closePinVerifyModal()" style="margin-bottom: 0;">Peruuta</button>
-        </div>
-    </div>
-
-    <div class="version">v6.13</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        let db = null;
-        const DB_NAME = 'VahinkorekisteriDB';
-        const STORE_NAME = 'vahingot';
-        let currentSort = { field: 'vahinkopäivä', asc: false };
-        const DEFAULT_PIN = "1234";
-        const SESSION_TIMEOUT = 15 * 60 * 1000;
-        const WARNING_TIME = 2 * 60 * 1000;
-        let sessionTimer = null;
-        let warningTimer = null;
-        let currentVahinkoId = null;
-        let loginAttempts = 0;
-        let isLocked = false;
-
-        const vahingot = [
-            {id:'ZOO-340-1',vahinkopäivä:'04.04.2026',kohde:'ZOO-340',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'IZB-283-1',vahinkopäivä:'04.11.2025',kohde:'IZB-283',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'EUH-604-1',vahinkopäivä:'01.02.2026',kohde:'EUH-604',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-06478-6',muistiinpanot:[],liitteet:[]},
-            {id:'SPH-912-1',vahinkopäivä:'12.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'XPT-996-1',vahinkopäivä:'14.02.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-03810-7',muistiinpanot:[],liitteet:[]},
-            {id:'CRG-288-1',vahinkopäivä:'16.12.2025',kohde:'CRG-288',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40325-38789-0',muistiinpanot:[],liitteet:[]},
-            {id:'ZOO-340-2',vahinkopäivä:'18.02.2026',kohde:'ZOO-340',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-06409-0',muistiinpanot:[],liitteet:[]},
-            {id:'XPT-996-2',vahinkopäivä:'18.03.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-07468-5',muistiinpanot:[],liitteet:[]},
-            {id:'LPK-763-1',vahinkopäivä:'21.01.2026',kohde:'LPK-763',tyyppi:'Liikennevahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'24-41026-00477-8',muistiinpanot:[],liitteet:[]},
-            {id:'IRC-438-1',vahinkopäivä:'23.01.2026',kohde:'IRC-438',tyyppi:'Liikennevahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'24-41026-01737-6',muistiinpanot:[],liitteet:[]},
-            {id:'LPK-763-2',vahinkopäivä:'24.01.2026',kohde:'LPK-763',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-04101-5',muistiinpanot:[],liitteet:[]},
-            {id:'SPH-912-2',vahinkopäivä:'24.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'FRA-923-1',vahinkopäivä:'24.01.2026',kohde:'FRA-923',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-04766-0',muistiinpanot:[],liitteet:[]},
-            {id:'IZB-283-2',vahinkopäivä:'24.01.2026',kohde:'IZB-283',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-04775-9',muistiinpanot:[],liitteet:[]},
-            {id:'SPH-912-3',vahinkopäivä:'24.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-04780-4',muistiinpanot:[],liitteet:[]},
-            {id:'OMA-001',vahinkopäivä:'24.01.2026',kohde:'Omaisuusvahinko',tyyppi:'Omaisuusvahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40926-00010-2',muistiinpanot:[],liitteet:[]},
-            {id:'RVB-201-1',vahinkopäivä:'26.03.2026',kohde:'RVB-201',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'24-40326-09306-9',muistiinpanot:[],liitteet:[]},
-            {id:'XPT-996-3',vahinkopäivä:'27.04.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'24-40326-12249-9',muistiinpanot:[],liitteet:[]},
-            {id:'EUH-604-2',vahinkopäivä:'27.04.2026',kohde:'EUH-604',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-12495-3',muistiinpanot:[],liitteet:[]},
-            {id:'IRC-438-2',vahinkopäivä:'30.03.2026',kohde:'IRC-438',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'24-40326-10447-7',muistiinpanot:['Etu oikea alakulma muovi valahtanut (ehkä sama vahinko 23.1. vahinko','Täytyy selvittää mikä vahinko?'],liitteet:[]},
-            {id:'ESA-107-1',vahinkopäivä:'05.05.2026',kohde:'ESA-107',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'24-40326-13401-9',muistiinpanot:[],liitteet:[]},
-            {id:'CKZ-391-1',vahinkopäivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsittelyssä',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'CKZ-391-2',vahinkopäivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
-            {id:'CKZ-391-3',vahinkopäivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]}
+        let data = JSON.parse(localStorage.getItem('vahinkorekisteri')) || [
+            {id:'ZOO-340-1',day:'2026-04-04',target:'ZOO-340',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
+            {id:'IZB-283-1',day:'2025-11-04',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]},
+            {id:'EUH-604-1',day:'2026-02-01',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06478-6',notes:'',files:[]},
+            {id:'SPH-912-1',day:'2026-01-12',target:'SPH-912',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
+            {id:'XPT-996-1',day:'2026-02-14',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-03810-7',notes:'',files:[]},
+            {id:'CRG-288-1',day:'2025-12-16',target:'CRG-288',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40325-38789-0',notes:'',files:[]},
+            {id:'ZOO-340-2',day:'2026-02-18',target:'ZOO-340',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06409-0',notes:'',files:[]},
+            {id:'XPT-996-2',day:'2026-03-18',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-07468-5',notes:'',files:[]},
+            {id:'LPK-763-1',day:'2026-01-21',target:'LPK-763',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-00477-8',notes:'',files:[]},
+            {id:'IRC-438-1',day:'2026-01-23',target:'IRC-438',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-01737-6',notes:'',files:[]},
+            {id:'LPK-763-2',day:'2026-01-24',target:'LPK-763',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04101-5',notes:'',files:[]},
+            {id:'SPH-912-2',day:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]},
+            {id:'FRA-923-1',day:'2026-01-24',target:'FRA-923',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04766-0',notes:'',files:[]},
+            {id:'IZB-283-2',day:'2026-01-24',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04775-9',notes:'',files:[]},
+            {id:'SPH-912-3',day:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04780-4',notes:'',files:[]},
+            {id:'OMA-001',day:'2026-01-24',target:'Omaisuusvahinko',type:'Omaisuusvahinko',status:'Käsitelty',ref:'24-40926-00010-2',notes:'',files:[]},
+            {id:'RVB-201-1',day:'2026-03-26',target:'RVB-201',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-09306-9',notes:'',files:[]},
+            {id:'XPT-996-3',day:'2026-04-27',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-12249-9',notes:'',files:[]},
+            {id:'EUH-604-2',day:'2026-04-27',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-12495-3',notes:'',files:[]},
+            {id:'IRC-438-2',day:'2026-03-30',target:'IRC-438',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-10447-7',notes:'Etu oikea alakulma muovi valahtanut',files:[]},
+            {id:'ESA-107-1',day:'2026-05-05',target:'ESA-107',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-13401-9',notes:'',files:[]},
+            {id:'CKZ-391-1',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'',notes:'',files:[]},
+            {id:'CKZ-391-2',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
+            {id:'CKZ-391-3',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]}
         ];
+        
+        let currentEdit = null;
 
-        let auditLog = [];
+        function save() { localStorage.setItem('vahinkorekisteri', JSON.stringify(data)); render(); }
+        function render() {
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = data.filter(v => v.target.toLowerCase().includes(search));
+            const html = filtered.map(v => `
+                <tr>
+                    <td>${v.day}</td>
+                    <td>${v.target}</td>
+                    <td>${v.type}</td>
+                    <td>${v.status || 'Avoin'}</td>
+                    <td>${v.ref || '—'}</td>
+                    <td>${v.files.length}</td>
+                    <td>
+                        <button onclick="editVahinko('${v.id}')">✏️ Muokkaa</button>
+                        <button class="danger" onclick="deleteVahinko('${v.id}')">🗑️ Poista</button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('tableBody').innerHTML = html;
+        }
 
-        function initIndexedDB(){return new Promise((resolve,reject)=>{const request=indexedDB.open(DB_NAME,1);request.onerror=()=>reject(request.error);request.onsuccess=()=>{db=request.result;resolve(db);};request.onupgradeneeded=(e)=>{const store=e.target.result.createObjectStore(STORE_NAME,{keyPath:'id'});store.createIndex('kohde','kohde',{unique:false});};});}
-        function saveToIndexedDB(v){if(!db)return;const tx=db.transaction(STORE_NAME,'readwrite');const store=tx.objectStore(STORE_NAME);store.clear();v.forEach(x=>store.add(x));}
-        function loadFromIndexedDB(){return new Promise((resolve)=>{if(!db){resolve([]);return;}const tx=db.transaction(STORE_NAME,'readonly');const store=tx.objectStore(STORE_NAME);const request=store.getAll();request.onsuccess=()=>resolve(request.result||[]);});}
-        function initPinInput(){const p=document.getElementById('pinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handlePinInput(e,i);p.appendChild(d);}}
-        function handlePinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3){document.querySelectorAll('.pin-digit')[i+1].focus();}else{loginWithPin();}}}
-        function loginWithPin(){if(isLocked){alert('Liian monta väärää yritystä. Ota yhteyttä: jacke.seilaa@gmail.com');return;}const pins=Array.from(document.querySelectorAll('.pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){logAction('LOGIN','Käyttäjä kirjautui sisään');document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='flex';startSessionTimer();loadData();}else{loginAttempts++;const remaining=3-loginAttempts;if(loginAttempts>=3){isLocked=true;logAction('LOGIN_FAILED','Liian monta väärää yritystä - lukittu');alert('PIN lukittu. Ota yhteyttä: jacke.seilaa@gmail.com');}else{document.getElementById('errorMsg').style.display='block';document.getElementById('errorMsg').textContent=`Väärä PIN. Yrityksiä jäljellä: ${remaining}`;Array.from(document.querySelectorAll('.pin-digit')).forEach(d=>{d.value='';});document.querySelectorAll('.pin-digit')[0].focus();logAction('LOGIN_FAILED',`Väärä PIN (yritys ${loginAttempts}/3)`);;}}}
-        function forgotPin(e){e.preventDefault();alert('PIN palautuspyyntö lähetetään sähköpostiin: jacke.seilaa@gmail.com\n\nOta yhteyttä suoraan sähköpostilla PIN-koodin palauttamiseksi.');logAction('PIN_RESET_REQUEST','Käyttäjä pyysi PIN-koodin palautusta');}
-        function logout(){logAction('LOGOUT','Käyttäjä kirjautui ulos');clearSessionTimer();location.reload();}
-        function startSessionTimer(){clearSessionTimer();updateSessionTime();sessionTimer=setInterval(updateSessionTime,1000);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';document.getElementById('sessionWarning').onclick=()=>{document.getElementById('sessionWarning').style.display='none';clearTimeout(warningTimer);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';},SESSION_TIMEOUT-WARNING_TIME);};},SESSION_TIMEOUT-WARNING_TIME);setTimeout(logout,SESSION_TIMEOUT);}
-        function updateSessionTime(){const r=Math.floor((SESSION_TIMEOUT-((new Date()-new Date(sessionStorage.getItem('loginTime')||new Date()))/1000)*1000)/1000);const m=Math.floor(r/60);const s=r%60;document.getElementById('sessionTime').textContent=`${m}:${String(s).padStart(2,'0')}`;}
-        function clearSessionTimer(){clearInterval(sessionTimer);clearTimeout(warningTimer);}
-        function logAction(action,details){const log={time:new Date().toLocaleString('fi-FI'),action:action,details:details,user:'Järmo'};auditLog.push(log);}
-        function verifyPINForDelete(){const p=document.getElementById('verifyPinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='verify-pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handleVerifyPinInput(e,i);p.appendChild(d);}document.getElementById('pinVerifyModal').classList.add('active');document.querySelector('.verify-pin-digit').focus();}
-        function handleVerifyPinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.verify-pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3){document.querySelectorAll('.verify-pin-digit')[i+1].focus();}else{confirmDelete();}}}
-        function confirmDelete(){const pins=Array.from(document.querySelectorAll('.verify-pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){if(confirm('Oletko TÄYSIN varma? Kaikki tiedot poistetaan pysyvästi (GDPR). Tätä ei voi perua.')){vahingot.length=0;saveToIndexedDB([]);renderTable();updateStats();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.');closePinVerifyModal();}}else{alert('Väärä PIN');Array.from(document.querySelectorAll('.verify-pin-digit')).forEach(d=>{d.value='';});document.querySelector('.verify-pin-digit').focus();}}
-        function closePinVerifyModal(){document.getElementById('pinVerifyModal').classList.remove('active');}
-        function syncToICloud(){const json=JSON.stringify(vahingot,null,2);const blob=new Blob([json],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`vahinkorekisteri_${new Date().toISOString().slice(0,10)}.json`;link.click();alert('✅ Tiedosto ladattu!\n\n1. Avaa Files-app\n2. Mene iCloud Drive → Valinnat\n3. Lataa vahinkorekisteri-xxx.json\n4. Avaa iPhone:lla ja valitse "Avaa Safari:lla"');logAction('ICLOUD_SYNC','Tiedot viedty iCloud:iin (JSON)');}
-        function exportExcel(){try{const headers=['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'];const data=vahingot.map(v=>[v.vahinkopäivä||'',v.kohde||'',v.tyyppi||'',v.käsittelyn_tila||'Avoin',v.vahinkotunnus||'']);const ws=XLSX.utils.aoa_to_sheet([headers,...data]);ws['!cols']=[{wch:15},{wch:20},{wch:20},{wch:15},{wch:20}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vahingot');XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);logAction('EXPORT','Excel viety');alert('Excel tiedosto ladattu onnistuneesti!');}catch(err){console.error('Export error:',err);alert('Virhe viennissä: '+err.message);}}
-        function sortTable(field){if(currentSort.field===field){currentSort.asc=!currentSort.asc;}else{currentSort.field=field;currentSort.asc=false;}renderTable();}
-        function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
-        function populateKohdeFilter(){const kohdeSet=new Set();vahingot.forEach(v=>{if(v.kohde)kohdeSet.add(v.kohde);});const select=document.getElementById('headerKohdeFilter');kohdeSet.forEach(k=>{const opt=document.createElement('option');opt.value=k;opt.textContent=k;select.appendChild(opt);});}
-        function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),kohde=document.getElementById('headerKohdeFilter').value,tyyppi=document.getElementById('headerTyyppiFilter').value,tila=document.getElementById('headerTilaFilter').value;let filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!kohde||v.kohde===kohde)&&(!tyyppi||v.tyyppi===tyyppi)&&(!tila||v.käsittelyn_tila===tila||(!tila&&!v.käsittelyn_tila)));filtered.sort((a,b)=>{let aVal=a[currentSort.field]||'';let bVal=b[currentSort.field]||'';if(currentSort.field==='vahinkopäivä'){aVal=dateToNum(aVal);bVal=dateToNum(bVal);}if(currentSort.asc){return aVal>bVal?1:-1;}else{return aVal<bVal?1:-1;}});document.querySelectorAll('th').forEach(th=>th.classList.remove('sorted','asc'));const fieldNames=['vahinkopäivä','kohde','tyyppi','käsittelyn_tila','vahinkotunnus'];const activeIdx=fieldNames.indexOf(currentSort.field);if(activeIdx>=0){document.querySelectorAll('th')[activeIdx].classList.add('sorted');if(currentSort.asc)document.querySelectorAll('th')[activeIdx].classList.add('asc');}t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
-        function updateStats(){const k=vahingot.filter(v=>v.käsittelyn_tila==='Käsitelty').length,ks=vahingot.filter(v=>v.käsittelyn_tila==='Käsittelyssä').length,a=vahingot.filter(v=>v.käsittelyn_tila==='Arkistoitu').length,o=vahingot.filter(v=>!v.käsittelyn_tila).length;document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Yhteensä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${vahingot.length}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsitellyt</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${k}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsittelyssä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${ks}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Arkistoidut</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${a}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Avoimet</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${o}</div></div>`;}
-        function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('[id$="Tab"]').forEach(d=>d.style.display='none');if(t==='list'){document.getElementById('listTab').style.display='flex';document.querySelector('[onclick="switchTab(\'list\')"]').classList.add('active');}else if(t==='summary'){document.getElementById('summaryTab').style.display='block';document.querySelector('[onclick="switchTab(\'summary\')"]').classList.add('active');updateStats();}else{document.getElementById('auditTab').style.display='block';document.querySelector('[onclick="switchTab(\'audit\')"]').classList.add('active');renderAuditLog();}}
-        function renderAuditLog(){const h=auditLog.map(l=>`<div style="border-bottom:1px solid var(--gray-200);padding:1rem;"><div style="font-weight:600;color:var(--navy)">${l.action}</div><div style="font-size:0.9rem;color:var(--text-secondary)">${l.details}</div><div style="font-size:0.8rem;color:#999">${l.time}</div></div>`).join('');document.getElementById('auditLog').innerHTML=h;}
-        function openFileDialog(){document.getElementById('multiFileInput').click();}
-        function openModal(i){currentVahinkoId=i;const v=vahingot.find(x=>x.id===i);document.getElementById('modalTitle').textContent=v.kohde;document.getElementById('modalPäivä').value=v.vahinkopäivä?v.vahinkopäivä.split('.').reverse().join('-'):'';document.getElementById('modalKohde').value=v.kohde;document.getElementById('modalTyyppi').value=v.tyyppi;document.getElementById('modalTila').value=v.käsittelyn_tila;document.getElementById('modalTunnus').value=v.vahinkotunnus;document.getElementById('muistiinpanot').innerHTML=v.muistiinpanot.map((m,idx)=>`<div class="muistiinpano"><div>"${m}"</div><button class="muistiinpano-btn" onclick="poistaMuistiinpano(${idx})">Poista</button></div>`).join('');document.getElementById('uusiMuistiinpano').value='';const liitteetHtml=v.liitteet.map((l,idx)=>{const isImage=l.name.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i);const preview=isImage?`<div class="liite-preview"><img src="${l.data}" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten"></div>`:`<div class="liite-preview teksti" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten">📄</div>`;const previewText=isImage?'':`<div class="liite-preview-text">${l.data.substring(0,100)}${l.data.length>100?'...':''}</div>`;return`<div class="liite-item">${preview}<div class="liite-info"><div class="liite-name">${l.name}</div>${previewText}<button class="muistiinpano-btn" onclick="poistaLiite(${idx})">Poista</button></div></div>`}).join('');document.getElementById('liitteet').innerHTML=liitteetHtml||'<p style="color:#999">Ei liitteitä</p>';document.getElementById('modal').classList.add('active');}
-        function closeModal(){document.getElementById('modal').classList.remove('active');saveToIndexedDB(vahingot);}
-        function saveField(f,v){const va=vahingot.find(x=>x.id===currentVahinkoId);if(va){if(f==='vahinkopäivä'){va.vahinkopäivä=v?v.split('-').reverse().join('.'):''}else{va[f]=v}renderTable();logAction('EDIT',`Vahinko ${va.kohde} muokattu (${f})`)}}
-        function lisääMuistiinpano(){const t=document.getElementById('uusiMuistiinpano').value.trim();if(t){vahingot.find(x=>x.id===currentVahinkoId).muistiinpanot.push(t);logAction('ADD_NOTE',`Muistiinpano lisätty vahinkoon ${vahingot.find(x=>x.id===currentVahinkoId).kohde}`);openModal(currentVahinkoId);}}
-        function poistaMuistiinpano(i){vahingot.find(x=>x.id===currentVahinkoId).muistiinpanot.splice(i,1);openModal(currentVahinkoId);}
-        function handleFileInput(){const input=document.getElementById('multiFileInput');const files=input.files;if(!files||!files.length)return;const v=vahingot.find(x=>x.id===currentVahinkoId);let loaded=0;Array.from(files).forEach((file)=>{const reader=new FileReader();reader.onload=(e)=>{v.liitteet.push({name:file.name,data:e.target.result});loaded++;if(loaded===files.length){openModal(currentVahinkoId);logAction('ADD_FILES',`${files.length} tiedostoa lisätty`);}};reader.onerror=()=>{loaded++;if(loaded===files.length)openModal(currentVahinkoId);};reader.readAsDataURL(file);});input.value='';}
-        function poistaLiite(i){vahingot.find(x=>x.id===currentVahinkoId).liitteet.splice(i,1);openModal(currentVahinkoId);}
-        function previewLiite(i){const l=vahingot.find(x=>x.id===currentVahinkoId).liitteet[i];const isImage=l.name.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i);const content=document.getElementById('previewContent');content.innerHTML=isImage?`<img src="${l.data}" style="max-width: 100%;">`:l.name.startsWith('[Teksti]')?`<pre>${l.data}</pre>`:`<p>Tiedosto: ${l.name}</p>`;document.getElementById('previewModal').classList.add('active');}
-        function closePreview(){document.getElementById('previewModal').classList.remove('active');}
-        function pasteText(){const t=prompt('Liitä teksti:');if(t){vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:'[Teksti] '+new Date().toLocaleString('fi-FI'),data:t});logAction('ADD_TEXT','Teksti liitetty');openModal(currentVahinkoId);}}
-        function lisääUusiVahinko(){const k=prompt('Kohde:');if(!k)return;const t=prompt('Tyyppi (Ajoneuvovahinko/Liikennevahinko/Omaisuusvahinko):');if(!t)return;const u={id:'UUS-'+Date.now(),vahinkopäivä:new Date().toLocaleDateString('fi-FI'),kohde:k,tyyppi:t,käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]};vahingot.push(u);logAction('CREATE','Uusi vahinko luotu: '+k);renderTable();updateStats();openModal(u.id);}
-        function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);saveToIndexedDB(vahingot);renderTable();updateStats();alert('✅ Varmuuskopio palautettu! Kaikki liitteet sekä tiedot ovat nyt näkyvillä.');logAction('RESTORE','Varmuuskopio palautettu');}catch(err){alert('Virhe tiedoston luvussa!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
-        async function loadData(){const loaded=await loadFromIndexedDB();if(loaded.length>0){vahingot.length=0;vahingot.push(...loaded);}populateKohdeFilter();renderTable();updateStats();document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('headerKohdeFilter').addEventListener('change',renderTable);document.getElementById('headerTyyppiFilter').addEventListener('change',renderTable);document.getElementById('headerTilaFilter').addEventListener('change',renderTable);document.getElementById('multiFileInput').addEventListener('change',handleFileInput);}
-        sessionStorage.setItem('loginTime',new Date().getTime());
-        initIndexedDB().then(()=>{initPinInput();document.querySelector('.pin-digit').focus();});
+        function filterTable() { render(); }
+        
+        function editVahinko(id) {
+            currentEdit = data.find(v => v.id === id);
+            document.getElementById('modalTitle').textContent = currentEdit.target;
+            document.getElementById('day').value = currentEdit.day;
+            document.getElementById('target').value = currentEdit.target;
+            document.getElementById('type').value = currentEdit.type;
+            document.getElementById('status').value = currentEdit.status;
+            document.getElementById('reference').value = currentEdit.ref;
+            document.getElementById('notes').value = currentEdit.notes;
+            
+            let html = '';
+            currentEdit.files.forEach((f, i) => {
+                if (f.data.startsWith('data:image')) {
+                    html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
+                } else {
+                    html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
+                }
+            });
+            document.getElementById('attachmentsList').innerHTML = html;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function addVahinko() {
+            currentEdit = { id: 'NEW-' + Date.now(), day: '', target: '', type: 'Ajoneuvovahinko', status: '', ref: '', notes: '', files: [] };
+            document.getElementById('modalTitle').textContent = 'Uusi vahinko';
+            document.getElementById('day').value = '';
+            document.getElementById('target').value = '';
+            document.getElementById('type').value = 'Ajoneuvovahinko';
+            document.getElementById('status').value = '';
+            document.getElementById('reference').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('attachmentsList').innerHTML = '';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function handleFiles() {
+            const files = document.getElementById('fileInput').files;
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentEdit.files.push({ name: file.name, data: e.target.result });
+                    let html = '';
+                    currentEdit.files.forEach((f, i) => {
+                        if (f.data.startsWith('data:image')) {
+                            html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
+                        } else {
+                            html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
+                        }
+                    });
+                    document.getElementById('attachmentsList').innerHTML = html;
+                };
+                reader.readAsDataURL(file);
+            });
+            document.getElementById('fileInput').value = '';
+        }
+
+        function deleteFile(i) {
+            currentEdit.files.splice(i, 1);
+            let html = '';
+            currentEdit.files.forEach((f, idx) => {
+                if (f.data.startsWith('data:image')) {
+                    html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${idx})">Poista</button></div>`;
+                } else {
+                    html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${idx})">Poista</button></div>`;
+                }
+            });
+            document.getElementById('attachmentsList').innerHTML = html;
+        }
+
+        function saveVahinko() {
+            currentEdit.day = document.getElementById('day').value;
+            currentEdit.target = document.getElementById('target').value;
+            currentEdit.type = document.getElementById('type').value;
+            currentEdit.status = document.getElementById('status').value;
+            currentEdit.ref = document.getElementById('reference').value;
+            currentEdit.notes = document.getElementById('notes').value;
+
+            if (!currentEdit.day || !currentEdit.target) {
+                alert('Täytä päivä ja kohde!');
+                return;
+            }
+
+            const existing = data.findIndex(v => v.id === currentEdit.id);
+            if (existing >= 0) {
+                data[existing] = currentEdit;
+            } else {
+                data.push(currentEdit);
+            }
+            save();
+            closeModal();
+        }
+
+        function deleteVahinko(id) {
+            if (confirm('Poista vahinko?')) {
+                data = data.filter(v => v.id !== id);
+                save();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            currentEdit = null;
+        }
+
+        function exportJSON() {
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `vahingot_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        }
+
+        function importJSON() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    data = imported;
+                    save();
+                    alert('✅ Tuodaan onnistuneesti!');
+                } catch (err) {
+                    alert('❌ Virheellinen JSON!');
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('importFile').value = '';
+        }
+
+        function exportExcel() {
+            const headers = ['Päivä', 'Kohde', 'Tyyppi', 'Tila', 'Tunnus', 'Muistiinpanot'];
+            const rows = data.map(v => [v.day, v.target, v.type, v.status || 'Avoin', v.ref || '', v.notes]);
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Vahingot');
+            XLSX.writeFile(wb, `vahingot_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function clearAll() {
+            if (confirm('Poista KAIKKI tiedot?')) {
+                data = [];
+                save();
+            }
+        }
+
+        render();
     </script>
 </body>
 </html>
