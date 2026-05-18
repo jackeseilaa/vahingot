@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.4</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.5</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -109,7 +109,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.4</h1>
+                <h1>📋 Vahinkorekisteri v6.5</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -184,8 +184,9 @@
         </div>
     </div>
 
-    <div class="version">v6.4</div>
+    <div class="version">v6.5</div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // IndexedDB setup
         let db = null;
@@ -269,7 +270,7 @@
 
         function initPinInput(){const p=document.getElementById('pinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handlePinInput(e,i);p.appendChild(d);}}
 
-        function handlePinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3)document.querySelectorAll('.pin-digit')[i+1].focus();}}
+        function handlePinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3){document.querySelectorAll('.pin-digit')[i+1].focus();}else{loginWithPin();}}}
 
         function loginWithPin(){if(isLocked){alert('Liian monta väärää yritystä. Ota yhteyttä: jacke.seilaa@gmail.com');return;}const pins=Array.from(document.querySelectorAll('.pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){logAction('LOGIN','Käyttäjä kirjautui sisään');document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='flex';startSessionTimer();loadData();}else{loginAttempts++;const remaining=3-loginAttempts;if(loginAttempts>=3){isLocked=true;logAction('LOGIN_FAILED','Liian monta väärää yritystä - lukittu');alert('PIN lukittu. Ota yhteyttä: jacke.seilaa@gmail.com');}else{document.getElementById('errorMsg').style.display='block';document.getElementById('errorMsg').textContent=`Väärä PIN. Yrityksiä jäljellä: ${remaining}`;Array.from(document.querySelectorAll('.pin-digit')).forEach(d=>{d.value='';});document.querySelectorAll('.pin-digit')[0].focus();logAction('LOGIN_FAILED',`Väärä PIN (yritys ${loginAttempts}/3)`);;}}}
 
@@ -287,7 +288,7 @@
 
         function verifyPINForDelete(){const p=document.getElementById('verifyPinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='verify-pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handleVerifyPinInput(e,i);p.appendChild(d);}document.getElementById('pinVerifyModal').classList.add('active');document.querySelector('.verify-pin-digit').focus();}
 
-        function handleVerifyPinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.verify-pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3)document.querySelectorAll('.verify-pin-digit')[i+1].focus();}}
+        function handleVerifyPinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.verify-pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3){document.querySelectorAll('.verify-pin-digit')[i+1].focus();}else{confirmDelete();}}}
 
         function confirmDelete(){const pins=Array.from(document.querySelectorAll('.verify-pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){if(confirm('Oletko TÄYSIN varma? Kaikki tiedot poistetaan pysyvästi (GDPR). Tätä ei voi perua.')){vahingot.length=0;saveToIndexedDB([]);renderTable();updateStats();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.');closePinVerifyModal();}}else{alert('Väärä PIN');Array.from(document.querySelectorAll('.verify-pin-digit')).forEach(d=>{d.value='';});document.querySelector('.verify-pin-digit').focus();}}
 
@@ -297,18 +298,15 @@
 
         function exportExcel(){
             try {
-                const rows=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä||'',v.kohde||'',v.tyyppi||'',v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])];
-                const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
-                const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-                const link=document.createElement('a');
-                link.setAttribute('href',URL.createObjectURL(blob));
-                link.setAttribute('download',`vahingot_${new Date().toISOString().slice(0,10)}.csv`);
-                link.style.visibility='hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const headers=['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'];
+                const data=vahingot.map(v=>[v.vahinkopäivä||'',v.kohde||'',v.tyyppi||'',v.käsittelyn_tila||'Avoin',v.vahinkotunnus||'']);
+                const ws=XLSX.utils.aoa_to_sheet([headers,...data]);
+                ws['!cols']=[{wch:15},{wch:20},{wch:20},{wch:15},{wch:20}];
+                const wb=XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb,ws,'Vahingot');
+                XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);
                 logAction('EXPORT','Excel viety');
-                alert('Tiedosto ladattu onnistuneesti!');
+                alert('Excel tiedosto ladattu onnistuneesti!');
             } catch(err) {
                 console.error('Export error:',err);
                 alert('Virhe viennissä: '+err.message);
