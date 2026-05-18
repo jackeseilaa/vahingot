@@ -1,138 +1,735 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vahinkorekisteri</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial;background:#f5f5f5}
-header{background:#0a4272;color:white;padding:2rem}
-main{max-width:1200px;margin:0 auto;padding:2rem}
-table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-th,td{padding:1rem;text-align:left;border-bottom:1px solid #ddd}
-th{background:#0a4272;color:white}
-tr:hover{background:#f9f9f9;cursor:pointer}
-.badge{padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:bold}
-.käsitelty{background:#d1fae5;color:#065f46}
-.käsittelyssä{background:#fef3c7;color:#92400e}
-.avoin{background:#fee2e2;color:#991b1b}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center}
-.modal.active{display:flex}
-.modal-content{background:white;padding:2rem;border-radius:8px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
-.modal-content h3{color:#0a4272;margin-bottom:1.5rem;font-size:1.3rem}
-.field{margin-bottom:1.5rem}
-.field label{display:block;font-weight:bold;color:#333;margin-bottom:0.5rem}
-.field p{background:#f5f5f5;padding:0.75rem;border-radius:4px}
-textarea{width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:4px;font-family:Arial;resize:vertical;min-height:80px}
-.muistiinpano{background:#fff3cd;border-left:4px solid #ffc107;padding:1rem;margin-bottom:1rem;border-radius:4px}
-.muistiinpano-teksti{margin-bottom:0.5rem;color:#333}
-.muistiinpano-buttons{display:flex;gap:0.5rem}
-.muistiinpano-buttons button{padding:0.4rem 0.8rem;font-size:0.8rem;cursor:pointer}
-.btn-delete{background:#dc3545;color:white;border:none;border-radius:4px;padding:0.4rem 0.8rem;cursor:pointer}
-.btn-delete:hover{background:#c82333}
-.liitteet{margin-top:2rem;padding-top:2rem;border-top:1px solid #ddd}
-.liitteet h4{color:#0a4272;margin-bottom:1rem}
-.liite-item{background:#f9f9f9;padding:1rem;border-radius:4px;margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center}
-.liite-name{color:#333;font-weight:bold}
-.file-input{display:none}
-button{background:#0a4272;color:white;padding:0.75rem 1.5rem;border:none;border-radius:4px;cursor:pointer;font-size:0.9rem}
-button:hover{background:#0a3050}
-.btn-secondary{background:#6c757d}
-.btn-secondary:hover{background:#5a6268}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a4272">
+    <title>Vahinkorekisteri — Vakuutusmeklari</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0a4272;
+            --gold: #d4af37;
+            --light-navy: #1a5a9e;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, #f0f4f8 100%);
+            color: var(--text-primary);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(10, 66, 114, 0.15);
+            border-bottom: 3px solid var(--gold);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        aside {
+            width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-left: 4px solid var(--gold);
+        }
+
+        aside h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            background: white;
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.2rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .tab-btn.active {
+            color: var(--navy);
+            border-bottom-color: var(--gold);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.käsitelty {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.käsittelyssä {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.avoin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--gold);
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            font-family: 'Outfit', sans-serif;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+            width: 100%;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            color: var(--navy);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .modal-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-field p {
+            font-size: 1rem;
+            color: var(--text-primary);
+            padding: 0.75rem;
+            background: var(--gray-50);
+            border-radius: 6px;
+        }
+
+        .muistiinpano {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+        }
+
+        .muistiinpano-teksti {
+            margin-bottom: 0.75rem;
+            color: #333;
+        }
+
+        .muistiinpano-btn {
+            background: #dc3545;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .muistiinpano-btn:hover {
+            background: #c82333;
+        }
+
+        .liitteet-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .liite-item {
+            background: var(--gray-50);
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-close {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .btn-close:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-secondary {
+            background: var(--gray-600);
+            color: white;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+            aside {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-<header><h1>📋 Vahinkorekisteri</h1></header>
-<main>
-<table>
-<thead><tr><th>Päivä</th><th>Kohde</th><th>Tyyppi</th><th>Tila</th><th>Tunnus</th></tr></thead>
-<tbody id="tbody"></tbody>
-</table>
-</main>
+    <header>
+        <h1>📋 Vahinkorekisteri</h1>
+        <p>Vakuutusmeklarin vahinkojen hallintajärjestelmä</p>
+    </header>
 
-<div id="modal" class="modal">
-<div class="modal-content">
-<h3 id="modalTitle"></h3>
-<div class="field"><label>Päivä</label><p id="modalPäivä">—</p></div>
-<div class="field"><label>Tyyppi</label><p id="modalTyyppi">—</p></div>
-<div class="field"><label>Tila</label><p id="modalTila">—</p></div>
-<div class="field"><label>Vahinkotunnus</label><p id="modalTunnus">—</p></div>
+    <main>
+        <aside>
+            <h2>Suodattimet</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Hae kohteella...">
+            </div>
 
-<div class="field">
-<label>Muistiinpanot</label>
-<div id="muistiinpanot"></div>
-<textarea id="uusiMuistiinpano" placeholder="Lisää uusi muistiinpano..."></textarea>
-<button onclick="lisääMuistiinpano()" style="margin-top:0.5rem">Lisää muistiinpano</button>
-</div>
+            <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.5rem;">Vahinkotyppi</label>
+            <select id="typeFilter">
+                <option value="">Kaikki</option>
+                <option value="Ajoneuvovahinko">Ajoneuvovahinko</option>
+                <option value="Liikennevahinko">Liikennevahinko</option>
+                <option value="Omaisuusvahinko">Omaisuusvahinko</option>
+            </select>
 
-<div class="liitteet">
-<h4>Liitteet</h4>
-<div id="liitteet"></div>
-<button onclick="document.getElementById('fileInput').click()" class="btn-secondary">Lisää liite</button>
-<input type="file" id="fileInput" class="file-input" onchange="lisääLiite()">
-</div>
+            <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.5rem;">Käsittelyn tila</label>
+            <select id="statusFilter">
+                <option value="">Kaikki</option>
+                <option value="Käsitelty">Käsitelty</option>
+                <option value="Käsittelyssä">Käsittelyssä</option>
+                <option value="avoin">Avoin</option>
+            </select>
 
-<div style="margin-top:2rem;display:flex;gap:1rem">
-<button onclick="closeModal()" class="btn-secondary">Sulje</button>
-</div>
-</div>
-</div>
+            <div id="asideStats" class="stats-grid" style="grid-template-columns: 1fr; margin-top: 1.5rem;"></div>
 
-<script>
-let currentVahinkoId=null;
-const data=[
-{id:0,päivä:'04.04.2026',kohde:'ZOO-340',tyyppi:'Ajoneuvovahinko',tila:'',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:1,päivä:'04.11.2025',kohde:'IZB-283',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:2,päivä:'01.02.2026',kohde:'EUH-604',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-06478-6',muistiinpanot:[],liitteet:[]},
-{id:3,päivä:'12.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',tila:'',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:4,päivä:'14.02.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-03810-7',muistiinpanot:[],liitteet:[]},
-{id:5,päivä:'16.12.2025',kohde:'CRG-288',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40325-38789-0',muistiinpanot:[],liitteet:[]},
-{id:6,päivä:'18.02.2026',kohde:'ZOO-340',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-06409-0',muistiinpanot:[],liitteet:[]},
-{id:7,päivä:'18.03.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-07468-5',muistiinpanot:[],liitteet:[]},
-{id:8,päivä:'21.01.2026',kohde:'LPK-763',tyyppi:'Liikennevahinko',tila:'Käsittelyssä',tunnus:'24-41026-00477-8',muistiinpanot:[],liitteet:[]},
-{id:9,päivä:'23.01.2026',kohde:'IRC-438',tyyppi:'Liikennevahinko',tila:'Käsittelyssä',tunnus:'24-41026-01737-6',muistiinpanot:[],liitteet:[]},
-{id:10,päivä:'24.01.2026',kohde:'LPK-763',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-04101-5',muistiinpanot:[],liitteet:[]},
-{id:11,päivä:'24.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:12,päivä:'24.01.2026',kohde:'FRA-923',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-04766-0',muistiinpanot:[],liitteet:[]},
-{id:13,päivä:'24.01.2026',kohde:'IZB-283',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-04775-9',muistiinpanot:[],liitteet:[]},
-{id:14,päivä:'24.01.2026',kohde:'SPH-912',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-04780-4',muistiinpanot:[],liitteet:[]},
-{id:15,päivä:'24.01.2026',kohde:'Omaisuusvahinko',tyyppi:'Omaisuusvahinko',tila:'Käsitelty',tunnus:'24-40926-00010-2',muistiinpanot:[],liitteet:[]},
-{id:16,päivä:'26.03.2026',kohde:'RVB-201',tyyppi:'Ajoneuvovahinko',tila:'Käsittelyssä',tunnus:'24-40326-09306-9',muistiinpanot:[],liitteet:[]},
-{id:17,päivä:'27.04.2026',kohde:'XPT-996',tyyppi:'Ajoneuvovahinko',tila:'Käsittelyssä',tunnus:'24-40326-12249-9',muistiinpanot:[],liitteet:[]},
-{id:18,päivä:'27.04.2026',kohde:'EUH-604',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-12495-3',muistiinpanot:[],liitteet:[]},
-{id:19,päivä:'30.03.2026',kohde:'IRC-438',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'24-40326-10447-7',muistiinpanot:['Etu oikea alakulma muovi valahtanut (ehkä sama vahinko 23.1. vahinko','Täytyy selvittää mikä vahinko?'],liitteet:[]},
-{id:20,päivä:'05.05.2026',kohde:'ESA-107',tyyppi:'Ajoneuvovahinko',tila:'Käsittelyssä',tunnus:'24-40326-13401-9',muistiinpanot:[],liitteet:[]},
-{id:21,päivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',tila:'Käsittelyssä',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:22,päivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',tila:'',tunnus:'',muistiinpanot:[],liitteet:[]},
-{id:23,päivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',tila:'Käsitelty',tunnus:'',muistiinpanot:[],liitteet:[]}
-];
+            <button class="btn-primary" onclick="exportData()">Vie Excel</button>
+        </aside>
 
-function render(){
-  const html=data.map(v=>`<tr onclick="openModal(${v.id})"><td>${v.päivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.tila==='Käsitelty'?'käsitelty':v.tila==='Käsittelyssä'?'käsittelyssä':'avoin'}">${v.tila||'Avoin'}</span></td><td>${v.tunnus||'—'}</td></tr>`).join('');
-  document.getElementById('tbody').innerHTML=html;
-}
+        <div class="content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('list')">Kooste</button>
+                <button class="tab-btn" onclick="switchTab('summary')">Yhteenveto</button>
+            </div>
 
-function openModal(id){
-  currentVahinkoId=id;
-  const v=data[id];
-  document.getElementById('modalTitle').textContent=v.kohde;
-  document.getElementById('modalPäivä').textContent=v.päivä||'—';
-  document.getElementById('modalTyyppi').textContent=v.tyyppi;
-  document.getElementById('modalTila').textContent=v.tila||'Avoin';
-  document.getElementById('modalTunnus').textContent=v.tunnus||'—';
-  
-  // Muistiinpanot
-  const muistiinpanotHtml=v.muistiinpanot.map((m,i)=>`<div class="muistiinpano"><div class="muistiinpano-teksti">"${m}"</div><div class="muistiinpano-buttons"><button class="btn-delete" onclick="poistaMuistiinpano(${i})">Poista</button></div></div>`).join('');
-  document.getElementById('muistiinpanot').innerHTML=muistiinpanotHtml;
-  document.getElementById('uusiMuistiinpano').value='';
-  
-  // Liitteet
-  const liitteetHtml=v.liitteet.map((l,i)=>`<div class="liite-item"><span class="liite-name">📎 ${l.name}</span><button class="btn-delete" onclick="poistaLiite(${i})">Poista</button></div>`).join('');
-  document.getElementById('liitteet').innerHTML=liitteetHtml||'<p style="color:#999">Ei liitteitä</p>';
-  
-  document.getElementById('modal').classList.add('active');
-}
+            <div id="listTab" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vahinkopäivä</th>
+                            <th>Kohde</th>
+                            <th>Tyyppi</th>
+                            <th>Tila</th>
+                            <th>Vahinkotunnus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="5" class="empty-state">Ladataan...</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-function closeModal(){
-  document.getElementById('modal').c
+            <div id="summaryTab" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Yhteensä vahinkoja</div>
+                        <div class="value" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Käsitellyt</div>
+                        <div class="value" id="käsiteltyCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Käsittelyssä</div>
+                        <div class="value" id="käsittelyssäCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Avoimet</div>
+                        <div class="value" id="avoinCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Vahinko</h3>
+            <div class="modal-field">
+                <label>Vahinkopäivä</label>
+                <p id="modalPäivä">—</p>
+            </div>
+            <div class="modal-field">
+                <label>Tyyppi</label>
+                <p id="modalTyyppi">—</p>
+            </div>
+            <div class="modal-field">
+                <label>Käsittelyn tila</label>
+                <p id="modalTila">—</p>
+            </div>
+            <div class="modal-field">
+                <label>Vahinkotunnus</label>
+                <p id="modalTunnus">—</p>
+            </div>
+
+            <div class="modal-field">
+                <label>Muistiinpanot</label>
+                <div id="muistiinpanot"></div>
+                <textarea id="uusiMuistiinpano" placeholder="Lisää uusi muistiinpano..."></textarea>
+                <button onclick="lisääMuistiinpano()" style="margin-top: 0.5rem; width: 100%;">Lisää muistiinpano</button>
+            </div>
+
+            <div class="liitteet-section">
+                <label style="display: block; margin-bottom: 1rem; font-weight: bold; color: var(--navy);">Liitteet</label>
+                <div id="liitteet"></div>
+                <button onclick="document.getElementById('fileInput').click()" class="btn-secondary" style="width: 100%;">Lisää liite</button>
+                <input type="file" id="fileInput" class="file-input" onchange="lisääLiite()">
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 0.75rem;">
+                <button onclick="closeModal()" class="btn-close" style="flex: 1;">Sulje</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVahinkoId = null;
+
+        const vahingot = [
+            { id: 'ZOO-340-1', vahinkopäivä: '04.04.2026', kohde: 'ZOO-340', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: '', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'IZB-283-1', vahinkopäivä: '04.11.2025', kohde: 'IZB-283', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'EUH-604-1', vahinkopäivä: '01.02.2026', kohde: 'EUH-604', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-06478-6', muistiinpanot: [], liitteet: [] },
+            { id: 'SPH-912-1', vahinkopäivä: '12.01.2026', kohde: 'SPH-912', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: '', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'XPT-996-1', vahinkopäivä: '14.02.2026', kohde: 'XPT-996', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-03810-7', muistiinpanot: [], liitteet: [] },
+            { id: 'CRG-288-1', vahinkopäivä: '16.12.2025', kohde: 'CRG-288', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40325-38789-0', muistiinpanot: [], liitteet: [] },
+            { id: 'ZOO-340-2', vahinkopäivä: '18.02.2026', kohde: 'ZOO-340', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-06409-0', muistiinpanot: [], liitteet: [] },
+            { id: 'XPT-996-2', vahinkopäivä: '18.03.2026', kohde: 'XPT-996', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-07468-5', muistiinpanot: [], liitteet: [] },
+            { id: 'LPK-763-1', vahinkopäivä: '21.01.2026', kohde: 'LPK-763', tyyppi: 'Liikennevahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '24-41026-00477-8', muistiinpanot: [], liitteet: [] },
+            { id: 'IRC-438-1', vahinkopäivä: '23.01.2026', kohde: 'IRC-438', tyyppi: 'Liikennevahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '24-41026-01737-6', muistiinpanot: [], liitteet: [] },
+            { id: 'LPK-763-2', vahinkopäivä: '24.01.2026', kohde: 'LPK-763', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-04101-5', muistiinpanot: [], liitteet: [] },
+            { id: 'SPH-912-2', vahinkopäivä: '24.01.2026', kohde: 'SPH-912', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'FRA-923-1', vahinkopäivä: '24.01.2026', kohde: 'FRA-923', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-04766-0', muistiinpanot: [], liitteet: [] },
+            { id: 'IZB-283-2', vahinkopäivä: '24.01.2026', kohde: 'IZB-283', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-04775-9', muistiinpanot: [], liitteet: [] },
+            { id: 'SPH-912-3', vahinkopäivä: '24.01.2026', kohde: 'SPH-912', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-04780-4', muistiinpanot: [], liitteet: [] },
+            { id: 'OMA-001', vahinkopäivä: '24.01.2026', kohde: 'Omaisuusvahinko', tyyppi: 'Omaisuusvahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40926-00010-2', muistiinpanot: [], liitteet: [] },
+            { id: 'RVB-201-1', vahinkopäivä: '26.03.2026', kohde: 'RVB-201', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '24-40326-09306-9', muistiinpanot: [], liitteet: [] },
+            { id: 'XPT-996-3', vahinkopäivä: '27.04.2026', kohde: 'XPT-996', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '24-40326-12249-9', muistiinpanot: [], liitteet: [] },
+            { id: 'EUH-604-2', vahinkopäivä: '27.04.2026', kohde: 'EUH-604', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-12495-3', muistiinpanot: [], liitteet: [] },
+            { id: 'IRC-438-2', vahinkopäivä: '30.03.2026', kohde: 'IRC-438', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-10447-7', muistiinpanot: ['Etu oikea alakulma muovi valahtanut (ehkä sama vahinko 23.1. vahinko', 'Täytyy selvittää mikä vahinko?'], liitteet: [] },
+            { id: 'ESA-107-1', vahinkopäivä: '05.05.2026', kohde: 'ESA-107', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '24-40326-13401-9', muistiinpanot: [], liitteet: [] },
+            { id: 'CKZ-391-1', vahinkopäivä: '', kohde: 'CKZ-391', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsittelyssä', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'CKZ-391-2', vahinkopäivä: '', kohde: 'CKZ-391', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: '', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+            { id: 'CKZ-391-3', vahinkopäivä: '', kohde: 'CKZ-391', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '', muistiinpanot: [], liitteet: [] },
+        ];
+
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filtered = vahingot.filter(v => {
+                const matchSearch = v.kohde.toLowerCase().includes(searchText);
+                const matchType = !typeFilter || v.tyyppi === typeFilter;
+                const matchStatus = !statusFilter || v.käsittelyn_tila === statusFilter || (!statusFilter && !v.käsittelyn_tila);
+                return matchSearch && matchType && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">Ei tuloksia</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = filtered.map(v => `
+                <tr onclick="openModal('${v.id}')">
+                    <td>${v.vahinkopäivä}</td>
+                    <td><strong>${v.kohde}</strong></td>
+                    <td>${v.tyyppi}</td>
+                    <td>
+                        <span class="badge ${v.käsittelyn_tila === 'Käsitelty' ? 'käsitelty' : v.käsittelyn_tila === 'Käsittelyssä' ? 'käsittelyssä' : 'avoin'}">
+                            ${v.käsittelyn_tila || 'Avoin'}
+                        </span>
+                    </td>
+                    <td>${v.vahinkotunnus || '—'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            const käsitelty = vahingot.filter(v => v.käsittelyn_tila === 'Käsitelty').length;
+            const käsittelyssä = vahingot.filter(v => v.käsittelyn_tila === 'Käsittelyssä').length;
+            const avoin = vahingot.filter(v => !v.käsittelyn_tila).length;
+
+            document.getElementById('totalCount').textContent = vahingot.length;
+            document.getElementById('käsiteltyCount').textContent = käsitelty;
+            document.getElementById('käsittelyssäCount').textContent = käsittelyssä;
+            document.getElementById('avoinCount').textContent = avoin;
+
+            document.getElementById('asideStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Näytetään</div>
+                    <div class="value">${document.querySelectorAll('#tableBody tr:not(.empty-state)').length}</div>
+                </div>
+            `;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('div[id$="Tab"]').forEach(d => d.style.display = 'none');
+
+            if (tab === 'list') {
+                document.getElementById('listTab').style.display = 'block';
+                document.querySelector('[onclick="switchTab(\'list\')"]').classList.add('active');
+            } else {
+                document.getElementById('summaryTab').style.display = 'block';
+                document.querySelector('[onclick="switchTab(\'summary\')"]').classList.add('active');
+            }
+        }
+
+        function openModal(id) {
+            currentVahinkoId = id;
+            const vahinko = vahingot.find(v => v.id === id);
+            if (!vahinko) return;
+
+            document.getElementById('modalTitle').textContent = vahinko.kohde;
+            document.getElementById('modalPäivä').textContent = vahinko.vahinkopäivä || '—';
+            document.getElementById('modalTyyppi').textContent = vahinko.tyyppi;
+            document.getElementById('modalTila').textContent = vahinko.käsittelyn_tila || 'Avoin';
+            document.getElementById('modalTunnus').textContent = vahinko.vahinkotunnus || '—';
+
+            // Muistiinpanot
+            const muistiinpanotHtml = vahinko.muistiinpanot.map((m, i) => `
+                <div class="muistiinpano">
+                    <div class="muistiinpano-teksti">"${m}"</div>
+                    <button class="muistiinpano-btn" onclick="poistaMuistiinpano(${i})">Poista</button>
+                </div>
+            `).join('');
+            document.getElementById('muistiinpanot').innerHTML = muistiinpanotHtml;
+            document.getElementById('uusiMuistiinpano').value = '';
+
+            // Liitteet
+            const liitteetHtml = vahinko.liitteet.map((l, i) => `
+                <div class="liite-item">
+                    <span>📎 ${l.name}</span>
+                    <button class="muistiinpano-btn" onclick="poistaLiite(${i})">Poista</button>
+                </div>
+            `).join('');
+            document.getElementById('liitteet').innerHTML = liitteetHtml || '<p style="color: #999;">Ei liitteitä</p>';
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            localStorage.setItem('vahingot', JSON.stringify(vahingot));
+        }
+
+        function lisääMuistiinpano() {
+            const teksti = document.getElementById('uusiMuistiinpano').value.trim();
+            if (!teksti) return;
+            const vahinko = vahingot.find(v => v.id === currentVahinkoId);
+            vahinko.muistiinpanot.push(teksti);
+            openModal(currentVahinkoId);
+        }
+
+        function poistaMuistiinpano(i) {
+            const vahinko = vahingot.find(v => v.id === currentVahinkoId);
+            vahinko.muistiinpanot.splice(i, 1);
+            openModal(currentVahinkoId);
+        }
+
+        function lisääLiite() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const vahinko = vahingot.find(v => v.id === currentVahinkoId);
+                vahinko.liitteet.push({ name: file.name, data: e.target.result });
+                openModal(currentVahinkoId);
+            };
+            reader.readAsDataURL(file);
+            document.getElementById('fileInput').value = '';
+        }
+
+        function poistaLiite(i) {
+            const vahinko = vahingot.find(v => v.id === currentVahinkoId);
+            vahinko.liitteet.splice(i, 1);
+            openModal(currentVahinkoId);
+        }
+
+        function exportData() {
+            const csv = [
+                ['Vahinkopäivä', 'Kohde', 'Tyyppi', 'Käsittelyn tila', 'Vahinkotunnus'],
+                ...vahingot.map(v => [
+                    v.vahinkopäivä,
+                    v.kohde,
+                    v.tyyppi,
+                    v.käsittelyn_tila || 'Avoin',
+                    v.vahinkotunnus || ''
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `vahingot_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderTable);
+        document.getElementById('typeFilter').addEventListener('change', renderTable);
+        document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+        const stored = localStorage.getItem('vahingot');
+        if (stored) {
+            const loaded = JSON.parse(stored);
+            loaded.forEach(l => {
+                const existing = vahingot.find(v => v.id === l.id);
+                if (existing) {
+                    existing.muistiinpanot = l.muistiinpanot || [];
+                    existing.liitteet = l.liitteet || [];
+                }
+            });
+        }
+
+        renderTable();
+        updateStats();
+    </script>
+</body>
+</html>
