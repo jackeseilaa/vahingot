@@ -2,309 +2,580 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vahinkorekisteri v7</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a4272">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Vahinkorekisteri | Vakuutusmeklari</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { background: #0a4272; color: white; padding: 20px; margin: -20px -20px 20px -20px; }
-        h1 { margin: 0; }
-        .version { font-size: 0.9rem; opacity: 0.8; }
-        table { width: 100%; background: white; border-collapse: collapse; margin: 20px 0; }
-        th { background: #0a4272; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #ddd; }
-        tr:hover { background: #f9f9f9; }
-        button { padding: 8px 16px; background: #0a4272; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        button:hover { background: #1a5a9e; }
-        .success { background: #28a745; }
-        .success:hover { background: #218838; }
-        .danger { background: #dc3545; }
-        .danger:hover { background: #c82333; }
-        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-        .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .liite { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; }
-        .liite img { max-width: 100%; height: auto; }
-        .section { margin: 20px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f8f9fa; }
+        body { display: flex; flex-direction: column; }
+        
+        /* LOGIN */
+        .login-container { display: none; height: 100vh; align-items: center; justify-content: center; background: linear-gradient(135deg, #0a4272 0%, #1a5a9e 100%); flex-direction: column; }
+        .login-container.active { display: flex; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 90%; max-width: 400px; text-align: center; }
+        .login-card h1 { color: #0a4272; margin-bottom: 10px; font-size: 28px; }
+        .login-card p { color: #666; margin-bottom: 30px; }
+        .pin-input { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; }
+        .pin-digit { width: 60px; height: 60px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 12px; font-weight: bold; background: white; }
+        .pin-digit:focus { outline: none; border-color: #0a4272; background: #f0f4f8; }
+        .login-btn { width: 100%; padding: 12px; background: #0a4272; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .login-btn:active { background: #051f40; }
+        .error { color: #dc3545; margin-bottom: 15px; font-weight: 600; }
+        
+        /* MAIN APP */
+        .app { display: none; height: 100vh; flex-direction: column; }
+        .app.active { display: flex; }
+        
+        /* HEADER */
+        header { background: linear-gradient(135deg, #0a4272 0%, #1a5a9e 100%); color: white; padding: 16px 20px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 20px; font-weight: 600; }
+        .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        
+        /* CONTENT */
+        .content { flex: 1; display: flex; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #eee; padding: 20px; overflow-y: auto; flex-shrink: 0; }
+        @media (max-width: 768px) { .sidebar { display: none; } }
+        .sidebar h2 { font-size: 14px; text-transform: uppercase; color: #0a4272; margin-bottom: 15px; margin-top: 20px; font-weight: 700; }
+        .sidebar h2:first-child { margin-top: 0; }
+        .sidebar input, .sidebar select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
+        .sidebar button { width: 100%; padding: 10px; background: #0a4272; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+        .sidebar button:active { background: #051f40; }
+        .sidebar button.success { background: #28a745; }
+        .sidebar button.danger { background: #dc3545; }
+        
+        /* MAIN AREA */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .table-wrapper { flex: 1; overflow-y: auto; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        th { background: #0a4272; color: white; padding: 12px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background: #f8f9fa; }
+        tr:last-child td { border-bottom: none; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge.käsitelty { background: #d4edda; color: #155724; }
+        .badge.käsittelyssä { background: #fff3cd; color: #856404; }
+        .badge.arkistoitu { background: #e2e3e5; color: #383d41; }
+        .badge.avoin { background: #f8d7da; color: #721c24; }
+        .btn-small { padding: 4px 8px; font-size: 12px; background: #0a4272; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-small.danger { background: #dc3545; }
+        
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 30px; }
+        .modal-content h2 { color: #0a4272; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 14px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0a4272; background: #f0f4f8; }
+        .note-item { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .attachment-item { background: #f0f0f0; padding: 10px; margin-bottom: 10px; border-radius: 6px; }
+        .attachment-item img { max-width: 100px; max-height: 100px; margin-bottom: 8px; display: block; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 30px; }
+        .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-save { background: #28a745; color: white; }
+        .btn-cancel { background: #6c757d; color: white; }
+        
+        /* UTILITIES */
+        .empty { text-align: center; padding: 40px 20px; color: #999; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; border-left: 4px solid #0a4272; }
+        .stat-card .value { font-size: 24px; font-weight: bold; color: #0a4272; }
+        .stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 18px; }
+            .table-wrapper { padding: 10px; }
+            th, td { padding: 8px; font-size: 12px; }
+            .modal-content { padding: 20px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📋 Vahinkorekisteri</h1>
-            <p class="version">v7 - Yksinkertainen & Toimiva</p>
-        </header>
-
-        <div class="section">
-            <h2>Hallinta</h2>
-            <button onclick="addVahinko()" class="success">+ Uusi vahinko</button>
-            <button onclick="exportJSON()" class="success">💾 Vie JSON iCloud:iin</button>
-            <button onclick="document.getElementById('importFile').click()" class="success">📂 Lataa JSON</button>
-            <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importJSON()">
-            <button onclick="exportExcel()" class="success">📊 Vie Excel</button>
-            <button onclick="clearAll()" class="danger">🗑️ Tyhjennä kaikki</button>
-        </div>
-
-        <div class="section">
-            <h2>Vahingot</h2>
-            <input type="text" id="searchBox" placeholder="Hae kohteella..." onkeyup="filterTable()">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Päivä</th>
-                        <th>Kohde</th>
-                        <th>Tyyppi</th>
-                        <th>Tila</th>
-                        <th>Tunnus</th>
-                        <th>Liitteet</th>
-                        <th>Toiminnot</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+    <!-- LOGIN SCREEN -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <h1>🔐 Vahinkorekisteri</h1>
+            <p>Vakuutusmeklarin aineistonhallinta</p>
+            <div class="error" id="loginError" style="display:none;"></div>
+            <div class="pin-input" id="pinInput"></div>
+            <button class="login-btn" onclick="validatePin()">Kirjaudu</button>
         </div>
     </div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h2 id="modalTitle"></h2>
-            <div>
-                <label>Päivä:</label>
-                <input type="date" id="day">
-                <label>Kohde:</label>
-                <input type="text" id="target">
-                <label>Tyyppi:</label>
-                <select id="type" style="width:100%; padding:8px;">
+    <!-- MAIN APP -->
+    <div class="app" id="mainApp">
+        <header>
+            <h1>📋 Vahinkorekisteri</h1>
+            <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
+        </header>
+
+        <div class="content">
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <h2>Suodattimet</h2>
+                <input type="text" id="searchInput" placeholder="Hae kohteella..." onkeyup="filterAndRender()">
+                <select id="typeFilter" onchange="filterAndRender()">
+                    <option value="">Kaikki tyypit</option>
                     <option>Ajoneuvovahinko</option>
                     <option>Liikennevahinko</option>
                     <option>Omaisuusvahinko</option>
                 </select>
-                <label>Tila:</label>
-                <select id="status" style="width:100%; padding:8px;">
+                <select id="statusFilter" onchange="filterAndRender()">
+                    <option value="">Kaikki tilat</option>
+                    <option value="avoin">Avoin</option>
+                    <option>Käsittelyssä</option>
+                    <option>Käsitelty</option>
+                    <option>Arkistoitu</option>
+                </select>
+
+                <h2>Tilastot</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="value" id="totalCount">0</div>
+                        <div class="label">Yhteensä</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="openCount">0</div>
+                        <div class="label">Avoimet</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="processCount">0</div>
+                        <div class="label">Käsittelyssä</div>
+                    </div>
+                </div>
+
+                <h2>Toiminnot</h2>
+                <button class="success" onclick="addNew()">➕ Uusi vahinko</button>
+                <button class="success" onclick="exportToJSON()">💾 Vie iCloud:iin</button>
+                <button class="success" onclick="document.getElementById('importInput').click()">📂 Lataa iCloud:sta</button>
+                <input type="file" id="importInput" accept=".json" onchange="importFromJSON()" style="display:none;">
+                <button class="success" onclick="exportToExcel()">📊 Excel</button>
+                <button class="danger" onclick="deleteAll()">🗑️ Poista kaikki</button>
+            </div>
+
+            <!-- MAIN AREA -->
+            <div class="main">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Päivä</th>
+                                <th>Kohde</th>
+                                <th>Tyyppi</th>
+                                <th>Tila</th>
+                                <th>Tunnus</th>
+                                <th>Kuvat</th>
+                                <th>Toiminnot</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="7" class="empty">Ladataan...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle"></h2>
+            
+            <div class="form-group">
+                <label>Päivämäärä</label>
+                <input type="date" id="formDate">
+            </div>
+
+            <div class="form-group">
+                <label>Kohde</label>
+                <input type="text" id="formTarget">
+            </div>
+
+            <div class="form-group">
+                <label>Tyyppi</label>
+                <select id="formType">
+                    <option>Ajoneuvovahinko</option>
+                    <option>Liikennevahinko</option>
+                    <option>Omaisuusvahinko</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Käsittelyn tila</label>
+                <select id="formStatus">
                     <option value="">Avoin</option>
                     <option>Käsittelyssä</option>
                     <option>Käsitelty</option>
                     <option>Arkistoitu</option>
                 </select>
-                <label>Tunnus:</label>
-                <input type="text" id="reference">
-                <label>Muistiinpanot:</label>
-                <textarea id="notes"></textarea>
-                <label>Liitteet:</label>
+            </div>
+
+            <div class="form-group">
+                <label>Vahinkotunnus</label>
+                <input type="text" id="formRef">
+            </div>
+
+            <div class="form-group">
+                <label>Muistiinpanot</label>
+                <div id="notesList"></div>
+                <textarea id="newNote" placeholder="Lisää uusi muistiinpano..."></textarea>
+                <button style="width: 100%; margin-top: 8px; padding: 8px; background: #0a4272; color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="addNote()">Lisää muistiinpano</button>
+            </div>
+
+            <div class="form-group">
+                <label>Liitteet (kuvat)</label>
                 <div id="attachmentsList"></div>
-                <button onclick="document.getElementById('fileInput').click()" class="success">📁 Lisää kuvia</button>
-                <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFiles()">
-                <br><br>
-                <button onclick="saveVahinko()" class="success">💾 Tallenna</button>
-                <button onclick="closeModal()">Peruuta</button>
+                <button style="width: 100%; padding: 10px; background: #0a4272; color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 10px;" onclick="document.getElementById('fileInput').click()">📁 Lisää kuvia</button>
+                <input type="file" id="fileInput" multiple accept="image/*" onchange="addAttachments()" style="display:none;">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="saveRecord()">💾 Tallenna</button>
+                <button class="btn-cancel" onclick="closeModal()">Peruuta</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        let data = JSON.parse(localStorage.getItem('vahinkorekisteri')) || [
-            {id:'ZOO-340-1',day:'2026-04-04',target:'ZOO-340',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
-            {id:'IZB-283-1',day:'2025-11-04',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]},
-            {id:'EUH-604-1',day:'2026-02-01',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06478-6',notes:'',files:[]},
-            {id:'SPH-912-1',day:'2026-01-12',target:'SPH-912',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
-            {id:'XPT-996-1',day:'2026-02-14',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-03810-7',notes:'',files:[]},
-            {id:'CRG-288-1',day:'2025-12-16',target:'CRG-288',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40325-38789-0',notes:'',files:[]},
-            {id:'ZOO-340-2',day:'2026-02-18',target:'ZOO-340',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06409-0',notes:'',files:[]},
-            {id:'XPT-996-2',day:'2026-03-18',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-07468-5',notes:'',files:[]},
-            {id:'LPK-763-1',day:'2026-01-21',target:'LPK-763',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-00477-8',notes:'',files:[]},
-            {id:'IRC-438-1',day:'2026-01-23',target:'IRC-438',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-01737-6',notes:'',files:[]},
-            {id:'LPK-763-2',day:'2026-01-24',target:'LPK-763',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04101-5',notes:'',files:[]},
-            {id:'SPH-912-2',day:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]},
-            {id:'FRA-923-1',day:'2026-01-24',target:'FRA-923',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04766-0',notes:'',files:[]},
-            {id:'IZB-283-2',day:'2026-01-24',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04775-9',notes:'',files:[]},
-            {id:'SPH-912-3',day:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04780-4',notes:'',files:[]},
-            {id:'OMA-001',day:'2026-01-24',target:'Omaisuusvahinko',type:'Omaisuusvahinko',status:'Käsitelty',ref:'24-40926-00010-2',notes:'',files:[]},
-            {id:'RVB-201-1',day:'2026-03-26',target:'RVB-201',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-09306-9',notes:'',files:[]},
-            {id:'XPT-996-3',day:'2026-04-27',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-12249-9',notes:'',files:[]},
-            {id:'EUH-604-2',day:'2026-04-27',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-12495-3',notes:'',files:[]},
-            {id:'IRC-438-2',day:'2026-03-30',target:'IRC-438',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-10447-7',notes:'Etu oikea alakulma muovi valahtanut',files:[]},
-            {id:'ESA-107-1',day:'2026-05-05',target:'ESA-107',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-13401-9',notes:'',files:[]},
-            {id:'CKZ-391-1',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'',notes:'',files:[]},
-            {id:'CKZ-391-2',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'',ref:'',notes:'',files:[]},
-            {id:'CKZ-391-3',day:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:'',files:[]}
-        ];
-        
-        let currentEdit = null;
+        const PIN = "1234";
+        let allData = JSON.parse(localStorage.getItem('vahinkorekisteri')) || getDefaultData();
+        let currentRecord = null;
+        let currentNotes = [];
+        let currentAttachments = [];
 
-        function save() { localStorage.setItem('vahinkorekisteri', JSON.stringify(data)); render(); }
-        function render() {
-            const search = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = data.filter(v => v.target.toLowerCase().includes(search));
-            const html = filtered.map(v => `
+        function getDefaultData() {
+            return [
+                {id:'ZOO-340-1',date:'2026-04-04',target:'ZOO-340',type:'Ajoneuvovahinko',status:'',ref:'',notes:[],files:[]},
+                {id:'IZB-283-1',date:'2025-11-04',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:[],files:[]},
+                {id:'EUH-604-1',date:'2026-02-01',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06478-6',notes:[],files:[]},
+                {id:'SPH-912-1',date:'2026-01-12',target:'SPH-912',type:'Ajoneuvovahinko',status:'',ref:'',notes:[],files:[]},
+                {id:'XPT-996-1',date:'2026-02-14',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-03810-7',notes:[],files:[]},
+                {id:'CRG-288-1',date:'2025-12-16',target:'CRG-288',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40325-38789-0',notes:[],files:[]},
+                {id:'ZOO-340-2',date:'2026-02-18',target:'ZOO-340',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-06409-0',notes:[],files:[]},
+                {id:'XPT-996-2',date:'2026-03-18',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-07468-5',notes:[],files:[]},
+                {id:'LPK-763-1',date:'2026-01-21',target:'LPK-763',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-00477-8',notes:[],files:[]},
+                {id:'IRC-438-1',date:'2026-01-23',target:'IRC-438',type:'Liikennevahinko',status:'Käsittelyssä',ref:'24-41026-01737-6',notes:[],files:[]},
+                {id:'LPK-763-2',date:'2026-01-24',target:'LPK-763',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04101-5',notes:[],files:[]},
+                {id:'SPH-912-2',date:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:[],files:[]},
+                {id:'FRA-923-1',date:'2026-01-24',target:'FRA-923',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04766-0',notes:[],files:[]},
+                {id:'IZB-283-2',date:'2026-01-24',target:'IZB-283',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04775-9',notes:[],files:[]},
+                {id:'SPH-912-3',date:'2026-01-24',target:'SPH-912',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-04780-4',notes:[],files:[]},
+                {id:'OMA-001',date:'2026-01-24',target:'Omaisuusvahinko',type:'Omaisuusvahinko',status:'Käsitelty',ref:'24-40926-00010-2',notes:[],files:[]},
+                {id:'RVB-201-1',date:'2026-03-26',target:'RVB-201',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-09306-9',notes:[],files:[]},
+                {id:'XPT-996-3',date:'2026-04-27',target:'XPT-996',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-12249-9',notes:[],files:[]},
+                {id:'EUH-604-2',date:'2026-04-27',target:'EUH-604',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-12495-3',notes:[],files:[]},
+                {id:'IRC-438-2',date:'2026-03-30',target:'IRC-438',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'24-40326-10447-7',notes:['Etu oikea alakulma muovi valahtanut'],files:[]},
+                {id:'ESA-107-1',date:'2026-05-05',target:'ESA-107',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'24-40326-13401-9',notes:[],files:[]},
+                {id:'CKZ-391-1',date:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsittelyssä',ref:'',notes:[],files:[]},
+                {id:'CKZ-391-2',date:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'',ref:'',notes:[],files:[]},
+                {id:'CKZ-391-3',date:'',target:'CKZ-391',type:'Ajoneuvovahinko',status:'Käsitelty',ref:'',notes:[],files:[]}
+            ];
+        }
+
+        function initPinInput() {
+            const container = document.getElementById('pinInput');
+            container.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const input = document.createElement('input');
+                input.type = 'password';
+                input.className = 'pin-digit';
+                input.maxLength = '1';
+                input.inputMode = 'numeric';
+                input.onkeyup = (e) => handlePinKeyup(e, i);
+                container.appendChild(input);
+            }
+            container.firstChild.focus();
+        }
+
+        function handlePinKeyup(e, i) {
+            const digits = document.querySelectorAll('.pin-digit');
+            if (e.key === 'Backspace') {
+                e.target.value = '';
+                if (i > 0) digits[i - 1].focus();
+            } else if (/[0-9]/.test(e.key)) {
+                e.target.value = e.key;
+                if (i < 3) digits[i + 1].focus();
+                else validatePin();
+            }
+        }
+
+        function validatePin() {
+            const digits = Array.from(document.querySelectorAll('.pin-digit')).map(d => d.value).join('');
+            if (digits === PIN) {
+                document.getElementById('loginContainer').classList.remove('active');
+                document.getElementById('mainApp').classList.add('active');
+                filterAndRender();
+            } else {
+                document.getElementById('loginError').textContent = 'Väärä PIN-koodi';
+                document.getElementById('loginError').style.display = 'block';
+                document.querySelectorAll('.pin-digit').forEach(d => d.value = '');
+                document.querySelector('.pin-digit').focus();
+            }
+        }
+
+        function logout() {
+            if (confirm('Kirjaudu ulos?')) {
+                document.getElementById('loginContainer').classList.add('active');
+                document.getElementById('mainApp').classList.remove('active');
+                document.getElementById('loginError').style.display = 'none';
+                initPinInput();
+            }
+        }
+
+        function save() {
+            localStorage.setItem('vahinkorekisteri', JSON.stringify(allData));
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const open = allData.filter(r => !r.status).length;
+            const processing = allData.filter(r => r.status === 'Käsittelyssä').length;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('openCount').textContent = open;
+            document.getElementById('processCount').textContent = processing;
+        }
+
+        function filterAndRender() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filtered = allData.filter(r => {
+                const matchSearch = r.target.toLowerCase().includes(search);
+                const matchType = !typeFilter || r.type === typeFilter;
+                const matchStatus = !statusFilter || (statusFilter === 'avoin' ? !r.status : r.status === statusFilter);
+                return matchSearch && matchType && matchStatus;
+            });
+
+            filtered.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+            const html = filtered.length ? filtered.map(r => `
                 <tr>
-                    <td>${v.day}</td>
-                    <td>${v.target}</td>
-                    <td>${v.type}</td>
-                    <td>${v.status || 'Avoin'}</td>
-                    <td>${v.ref || '—'}</td>
-                    <td>${v.files.length}</td>
+                    <td>${r.date || '—'}</td>
+                    <td><strong>${r.target}</strong></td>
+                    <td>${r.type}</td>
+                    <td><span class="badge ${r.status ? r.status.toLowerCase().replace(/\s+/g, '') : 'avoin'}">${r.status || 'Avoin'}</span></td>
+                    <td>${r.ref || '—'}</td>
+                    <td>${r.files.length}</td>
                     <td>
-                        <button onclick="editVahinko('${v.id}')">✏️ Muokkaa</button>
-                        <button class="danger" onclick="deleteVahinko('${v.id}')">🗑️ Poista</button>
+                        <button class="btn-small" onclick="editRecord('${r.id}')">✏️</button>
+                        <button class="btn-small danger" onclick="deleteRecord('${r.id}')">🗑️</button>
                     </td>
                 </tr>
-            `).join('');
+            `).join('') : '<tr><td colspan="7" class="empty">Ei tuloksia</td></tr>';
+
             document.getElementById('tableBody').innerHTML = html;
+            updateStats();
         }
 
-        function filterTable() { render(); }
-        
-        function editVahinko(id) {
-            currentEdit = data.find(v => v.id === id);
-            document.getElementById('modalTitle').textContent = currentEdit.target;
-            document.getElementById('day').value = currentEdit.day;
-            document.getElementById('target').value = currentEdit.target;
-            document.getElementById('type').value = currentEdit.type;
-            document.getElementById('status').value = currentEdit.status;
-            document.getElementById('reference').value = currentEdit.ref;
-            document.getElementById('notes').value = currentEdit.notes;
-            
-            let html = '';
-            currentEdit.files.forEach((f, i) => {
-                if (f.data.startsWith('data:image')) {
-                    html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
-                } else {
-                    html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
-                }
-            });
-            document.getElementById('attachmentsList').innerHTML = html;
+        function editRecord(id) {
+            currentRecord = allData.find(r => r.id === id);
+            currentNotes = [...currentRecord.notes];
+            currentAttachments = [...currentRecord.files];
+
+            document.getElementById('modalTitle').textContent = `Muokkaa: ${currentRecord.target}`;
+            document.getElementById('formDate').value = currentRecord.date;
+            document.getElementById('formTarget').value = currentRecord.target;
+            document.getElementById('formType').value = currentRecord.type;
+            document.getElementById('formStatus').value = currentRecord.status;
+            document.getElementById('formRef').value = currentRecord.ref;
+            document.getElementById('newNote').value = '';
+
+            renderNotes();
+            renderAttachments();
             document.getElementById('modal').classList.add('active');
         }
 
-        function addVahinko() {
-            currentEdit = { id: 'NEW-' + Date.now(), day: '', target: '', type: 'Ajoneuvovahinko', status: '', ref: '', notes: '', files: [] };
+        function addNew() {
+            currentRecord = {
+                id: 'NEW-' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                target: '',
+                type: 'Ajoneuvovahinko',
+                status: '',
+                ref: '',
+                notes: [],
+                files: []
+            };
+            currentNotes = [];
+            currentAttachments = [];
+
             document.getElementById('modalTitle').textContent = 'Uusi vahinko';
-            document.getElementById('day').value = '';
-            document.getElementById('target').value = '';
-            document.getElementById('type').value = 'Ajoneuvovahinko';
-            document.getElementById('status').value = '';
-            document.getElementById('reference').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('attachmentsList').innerHTML = '';
+            document.getElementById('formDate').value = currentRecord.date;
+            document.getElementById('formTarget').value = '';
+            document.getElementById('formType').value = 'Ajoneuvovahinko';
+            document.getElementById('formStatus').value = '';
+            document.getElementById('formRef').value = '';
+            document.getElementById('newNote').value = '';
+
+            renderNotes();
+            renderAttachments();
             document.getElementById('modal').classList.add('active');
         }
 
-        function handleFiles() {
+        function addNote() {
+            const note = document.getElementById('newNote').value.trim();
+            if (note) {
+                currentNotes.push(note);
+                document.getElementById('newNote').value = '';
+                renderNotes();
+            }
+        }
+
+        function renderNotes() {
+            const html = currentNotes.map((n, i) => `
+                <div class="note-item">
+                    <span>${n}</span>
+                    <button class="btn-small danger" style="margin-left: 10px;" onclick="deleteNote(${i})">✕</button>
+                </div>
+            `).join('');
+            document.getElementById('notesList').innerHTML = html;
+        }
+
+        function deleteNote(i) {
+            currentNotes.splice(i, 1);
+            renderNotes();
+        }
+
+        function addAttachments() {
             const files = document.getElementById('fileInput').files;
+            let loaded = 0;
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    currentEdit.files.push({ name: file.name, data: e.target.result });
-                    let html = '';
-                    currentEdit.files.forEach((f, i) => {
-                        if (f.data.startsWith('data:image')) {
-                            html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
-                        } else {
-                            html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${i})">Poista</button></div>`;
-                        }
-                    });
-                    document.getElementById('attachmentsList').innerHTML = html;
+                    currentAttachments.push({ name: file.name, data: e.target.result });
+                    loaded++;
+                    if (loaded === files.length) {
+                        renderAttachments();
+                    }
                 };
                 reader.readAsDataURL(file);
             });
             document.getElementById('fileInput').value = '';
         }
 
-        function deleteFile(i) {
-            currentEdit.files.splice(i, 1);
-            let html = '';
-            currentEdit.files.forEach((f, idx) => {
-                if (f.data.startsWith('data:image')) {
-                    html += `<div class="liite"><img src="${f.data}" style="max-width:100px;"><br><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${idx})">Poista</button></div>`;
-                } else {
-                    html += `<div class="liite"><strong>${f.name}</strong> <button class="danger" onclick="deleteFile(${idx})">Poista</button></div>`;
-                }
-            });
+        function renderAttachments() {
+            const html = currentAttachments.map((f, i) => `
+                <div class="attachment-item">
+                    ${f.data.startsWith('data:image') ? `<img src="${f.data}">` : ''}
+                    <small>${f.name}</small>
+                    <button class="btn-small danger" onclick="deleteAttachment(${i})" style="margin-left: 10px;">Poista</button>
+                </div>
+            `).join('');
             document.getElementById('attachmentsList').innerHTML = html;
         }
 
-        function saveVahinko() {
-            currentEdit.day = document.getElementById('day').value;
-            currentEdit.target = document.getElementById('target').value;
-            currentEdit.type = document.getElementById('type').value;
-            currentEdit.status = document.getElementById('status').value;
-            currentEdit.ref = document.getElementById('reference').value;
-            currentEdit.notes = document.getElementById('notes').value;
+        function deleteAttachment(i) {
+            currentAttachments.splice(i, 1);
+            renderAttachments();
+        }
 
-            if (!currentEdit.day || !currentEdit.target) {
-                alert('Täytä päivä ja kohde!');
+        function saveRecord() {
+            if (!document.getElementById('formTarget').value.trim()) {
+                alert('Kohde vaaditaan');
                 return;
             }
 
-            const existing = data.findIndex(v => v.id === currentEdit.id);
-            if (existing >= 0) {
-                data[existing] = currentEdit;
+            currentRecord.date = document.getElementById('formDate').value;
+            currentRecord.target = document.getElementById('formTarget').value;
+            currentRecord.type = document.getElementById('formType').value;
+            currentRecord.status = document.getElementById('formStatus').value;
+            currentRecord.ref = document.getElementById('formRef').value;
+            currentRecord.notes = currentNotes;
+            currentRecord.files = currentAttachments;
+
+            const idx = allData.findIndex(r => r.id === currentRecord.id);
+            if (idx >= 0) {
+                allData[idx] = currentRecord;
             } else {
-                data.push(currentEdit);
+                allData.push(currentRecord);
             }
+
             save();
             closeModal();
+            filterAndRender();
         }
 
-        function deleteVahinko(id) {
+        function deleteRecord(id) {
             if (confirm('Poista vahinko?')) {
-                data = data.filter(v => v.id !== id);
+                allData = allData.filter(r => r.id !== id);
                 save();
+                filterAndRender();
             }
         }
 
         function closeModal() {
             document.getElementById('modal').classList.remove('active');
-            currentEdit = null;
+            currentRecord = null;
+            currentNotes = [];
+            currentAttachments = [];
         }
 
-        function exportJSON() {
-            const json = JSON.stringify(data, null, 2);
+        function exportToJSON() {
+            const json = JSON.stringify(allData, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `vahingot_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `vahingot_${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            alert('✅ Tiedosto ladattu. Siirrä se iCloud Drive:lle.');
         }
 
-        function importJSON() {
-            const file = document.getElementById('importFile').files[0];
+        function importFromJSON() {
+            const file = document.getElementById('importInput').files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    data = imported;
+                    allData = JSON.parse(e.target.result);
                     save();
-                    alert('✅ Tuodaan onnistuneesti!');
+                    filterAndRender();
+                    alert('✅ Tiedot tuotu onnistuneesti!');
                 } catch (err) {
-                    alert('❌ Virheellinen JSON!');
+                    alert('❌ Virheellinen tiedosto');
                 }
             };
             reader.readAsText(file);
-            document.getElementById('importFile').value = '';
+            document.getElementById('importInput').value = '';
         }
 
-        function exportExcel() {
+        function exportToExcel() {
             const headers = ['Päivä', 'Kohde', 'Tyyppi', 'Tila', 'Tunnus', 'Muistiinpanot'];
-            const rows = data.map(v => [v.day, v.target, v.type, v.status || 'Avoin', v.ref || '', v.notes]);
+            const rows = allData.map(r => [
+                r.date || '',
+                r.target,
+                r.type,
+                r.status || 'Avoin',
+                r.ref || '',
+                r.notes.join('; ')
+            ]);
             const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Vahingot');
             XLSX.writeFile(wb, `vahingot_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
 
-        function clearAll() {
-            if (confirm('Poista KAIKKI tiedot?')) {
-                data = [];
+        function deleteAll() {
+            if (confirm('Poista KAIKKI tiedot? Tätä ei voi perua!')) {
+                allData = [];
                 save();
+                filterAndRender();
+                alert('✅ Tiedot poistettu');
             }
         }
 
-        render();
+        // Initialize
+        initPinInput();
+        document.getElementById('loginContainer').classList.add('active');
     </script>
 </body>
 </html>
