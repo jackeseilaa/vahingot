@@ -4,14 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v5.4</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
         html, body { height: 100%; font-family: 'Outfit', -apple-system, sans-serif; background: linear-gradient(135deg, var(--gray-50) 0%, #f0f4f8 100%); color: var(--text-primary); }
         body { display: flex; flex-direction: column; }
-        header { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; padding: 2rem 1.5rem; border-bottom: 3px solid var(--gold); flex-shrink: 0; }
-        header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); }
+        .login-card { background: white; border-radius: 12px; padding: 3rem; box-shadow: 0 20px 60px rgba(10,66,114,0.3); max-width: 400px; text-align: center; }
+        .login-card h1 { color: var(--navy); margin-bottom: 0.5rem; font-size: 1.8rem; }
+        .login-card p { color: var(--text-secondary); margin-bottom: 2rem; }
+        .pin-input { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+        .pin-digit { width: 50px; height: 50px; font-size: 2rem; text-align: center; border: 2px solid var(--gray-300); border-radius: 8px; font-weight: 700; }
+        .pin-digit:focus { outline: none; border-color: var(--gold); background: #fffbf0; }
+        .login-btn { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; border: none; padding: 0.75rem 2rem; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 1rem; }
+        .login-btn:hover { transform: translateY(-2px); }
+        .forgot-pin { color: var(--gold); text-decoration: none; font-size: 0.9rem; }
+        .error-msg { color: #dc3545; margin-bottom: 1rem; font-weight: 600; }
+        .session-warning { position: fixed; top: 1rem; right: 1rem; background: #ff9800; color: white; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; }
+        header { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; padding: 2rem 1.5rem; border-bottom: 3px solid var(--gold); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.8rem; font-weight: 700; }
+        .logout-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
         main { flex: 1; display: flex; gap: 1.5rem; padding: 1.5rem; width: 100%; min-height: 0; }
         aside { width: 320px; background: white; border-radius: 12px; padding: 1.5rem; overflow-y: auto; border-left: 4px solid var(--gold); flex-shrink: 0; }
         aside h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--navy); font-weight: 600; }
@@ -38,6 +51,7 @@
         button { font-family: 'Outfit', sans-serif; border: none; border-radius: 6px; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-transform: uppercase; }
         .btn-primary { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; width: 100%; margin-bottom: 0.75rem; }
         .btn-secondary { background: var(--gray-600); color: white; width: 100%; margin-bottom: 0.75rem; }
+        .btn-danger { background: #dc3545; color: white; width: 100%; margin-bottom: 0.75rem; }
         .stat-card { background: white; border-radius: 12px; padding: 1.2rem; border-top: 4px solid var(--gold); }
         .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--navy); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -53,7 +67,7 @@
         .liite-item { background: var(--gray-50); padding: 1rem; margin-bottom: 0.75rem; border-radius: 6px; display: flex; gap: 1rem; align-items: flex-start; }
         .liite-preview { width: 80px; height: 80px; background: white; border: 1px solid var(--gray-300); border-radius: 4px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
         .liite-preview img { max-width: 100%; max-height: 100%; }
-        .liite-preview.teksti { background: #f0f4f8; color: var(--navy); font-size: 0.7rem; padding: 0.5rem; text-align: center; overflow: hidden; }
+        .liite-preview.teksti { background: #f0f4f8; color: var(--navy); font-size: 0.7rem; padding: 0.5rem; text-align: center; }
         .liite-info { flex: 1; }
         .liite-name { font-weight: 600; color: var(--navy); margin-bottom: 0.25rem; }
         .liite-preview-text { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; max-height: 60px; overflow: hidden; }
@@ -68,41 +82,64 @@
     </style>
 </head>
 <body>
-    <header>
-        <h1>📋 Vahinkorekisteri v5.4</h1>
-        <p>Vakuutusmeklarin vahinkojen hallintajärjestelmä</p>
-    </header>
-
-    <main>
-        <aside>
-            <h2>Suodattimet</h2>
-            <div class="search-box"><input type="text" id="searchInput" placeholder="Hae kohteella..."></div>
-            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Vahinkotyppi</label>
-            <select id="typeFilter"><option value="">Kaikki</option><option value="Ajoneuvovahinko">Ajoneuvovahinko</option><option value="Liikennevahinko">Liikennevahinko</option><option value="Omaisuusvahinko">Omaisuusvahinko</option></select>
-            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Käsittelyn tila</label>
-            <select id="statusFilter"><option value="">Kaikki</option><option value="Käsitelty">Käsitelty</option><option value="Käsittelyssä">Käsittelyssä</option><option value="Arkistoitu">Arkistoitu</option><option value="avoin">Avoin</option></select>
-            <div id="asideStats" style="margin-top: 1.5rem;"></div>
-            <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
-            <button class="btn-primary" onclick="lataVarmuuskopio()">⬇ Lataa varmuuskopio</button>
-            <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Palauta varmuuskopio</button>
-            <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
-            <button class="btn-secondary" onclick="exportData()">📊 Vie Excel</button>
-        </aside>
-
-        <div class="content">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('list')">Kooste</button>
-                <button class="tab-btn" onclick="switchTab('summary')">Yhteenveto</button>
-            </div>
-            <div id="listTab" class="table-container">
-                <table>
-                    <thead><tr><th>Vahinkopäivä</th><th>Kohde</th><th>Tyyppi</th><th>Tila</th><th>Vahinkotunnus</th></tr></thead>
-                    <tbody id="tableBody"><tr><td colspan="5" style="text-align: center; padding: 3rem;">Ladataan...</td></tr></tbody>
-                </table>
-            </div>
-            <div id="summaryTab" style="display: none;"><div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"></div></div>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <h1>🔐 Vahinkorekisteri</h1>
+            <p>PIN-koodi vaaditaan pääsyyn (GDPR-suojattu)</p>
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+            <div class="pin-input" id="pinInput"></div>
+            <button class="login-btn" onclick="loginWithPin()">Kirjaudu</button>
+            <a href="#" class="forgot-pin" onclick="forgotPin(event)">Unohdit PIN:in?</a>
         </div>
-    </main>
+    </div>
+
+    <div id="mainApp" style="display: none; flex: 1; flex-direction: column;">
+        <div id="sessionWarning" class="session-warning" style="display: none;">
+            ⚠️ Istunto päättyy 2 minuutissa. Klikkaa jatkaksesi.
+        </div>
+
+        <header>
+            <div>
+                <h1>📋 Vahinkorekisteri v6.0</h1>
+                <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
+        </header>
+
+        <main>
+            <aside>
+                <h2>Suodattimet</h2>
+                <div class="search-box"><input type="text" id="searchInput" placeholder="Hae kohteella..."></div>
+                <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Vahinkotyppi</label>
+                <select id="typeFilter"><option value="">Kaikki</option><option value="Ajoneuvovahinko">Ajoneuvovahinko</option><option value="Liikennevahinko">Liikennevahinko</option><option value="Omaisuusvahinko">Omaisuusvahinko</option></select>
+                <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Käsittelyn tila</label>
+                <select id="statusFilter"><option value="">Kaikki</option><option value="Käsitelty">Käsitelty</option><option value="Käsittelyssä">Käsittelyssä</option><option value="Arkistoitu">Arkistoitu</option><option value="avoin">Avoin</option></select>
+                <div id="asideStats" style="margin-top: 1.5rem;"></div>
+                <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
+                <button class="btn-primary" onclick="lataVarmuuskopio()">⬇ Lataa varmuuskopio</button>
+                <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Palauta varmuuskopio</button>
+                <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
+                <button class="btn-secondary" onclick="exportData()">📊 Vie Excel</button>
+                <button class="btn-danger" onclick="deleteAllData()">🗑 Poista kaikki (GDPR)</button>
+            </aside>
+
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('list')">Kooste</button>
+                    <button class="tab-btn" onclick="switchTab('summary')">Yhteenveto</button>
+                    <button class="tab-btn" onclick="switchTab('audit')">Audit Log</button>
+                </div>
+                <div id="listTab" class="table-container">
+                    <table>
+                        <thead><tr><th>Vahinkopäivä</th><th>Kohde</th><th>Tyyppi</th><th>Tila</th><th>Vahinkotunnus</th></tr></thead>
+                        <tbody id="tableBody"><tr><td colspan="5" style="text-align: center; padding: 3rem;">Ladataan...</td></tr></tbody>
+                    </table>
+                </div>
+                <div id="summaryTab" style="display: none;"><div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"></div></div>
+                <div id="auditTab" style="display: none; background: white; border-radius: 12px; padding: 1.5rem; overflow-y: auto;"><div id="auditLog"></div></div>
+            </div>
+        </main>
+    </div>
 
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -124,10 +161,19 @@
         <button onclick="closePreview()" style="position: absolute; top: 1rem; right: 1rem; background: white; color: var(--navy); padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer;">✕</button>
     </div>
 
-    <div class="version">v5.4</div>
+    <div class="version">v6.0</div>
 
     <script>
+        // Turvallisuus
+        const DEFAULT_PIN = "1234";
+        const SESSION_TIMEOUT = 15 * 60 * 1000;
+        const WARNING_TIME = 2 * 60 * 1000;
+        let sessionTimer = null;
+        let warningTimer = null;
         let currentVahinkoId = null;
+        let loginAttempts = 0;
+        let isLocked = false;
+
         const vahingot = [
             {id:'ZOO-340-1',vahinkopäivä:'04.04.2026',kohde:'ZOO-340',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
             {id:'IZB-283-1',vahinkopäivä:'04.11.2025',kohde:'IZB-283',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]},
@@ -155,24 +201,46 @@
             {id:'CKZ-391-3',vahinkopäivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]}
         ];
 
+        let auditLog = JSON.parse(sessionStorage.getItem('auditLog') || '[]');
+
+        function initPinInput(){const p=document.getElementById('pinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handlePinInput(e,i);p.appendChild(d);}}
+
+        function handlePinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3)document.querySelectorAll('.pin-digit')[i+1].focus();}}
+
+        function loginWithPin(){if(isLocked){alert('Liian monta väärää yritystä. Ota yhteyttä: jacke.seilaa@gmail.com');return;}const pins=Array.from(document.querySelectorAll('.pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){logAction('LOGIN','Käyttäjä kirjautui sisään');document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='flex';startSessionTimer();loadData();renderTable();updateStats();document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('typeFilter').addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);}else{loginAttempts++;const remaining=3-loginAttempts;if(loginAttempts>=3){isLocked=true;logAction('LOGIN_FAILED','Liian monta väärää yritystä - lukittu');alert('PIN lukittu. Ota yhteyttä: jacke.seilaa@gmail.com');}else{document.getElementById('errorMsg').style.display='block';document.getElementById('errorMsg').textContent=`Väärä PIN. Yrityksiä jäljellä: ${remaining}`;Array.from(document.querySelectorAll('.pin-digit')).forEach(d=>{d.value='';});document.querySelectorAll('.pin-digit')[0].focus();logAction('LOGIN_FAILED',`Väärä PIN (yritys ${loginAttempts}/3)`);;}}}
+
+        function forgotPin(e){e.preventDefault();alert('PIN palautuspyyntö lähetetään sähköpostiin: jacke.seilaa@gmail.com\n\nOta yhteyttä suoraan sähköpostilla PIN-koodin palauttamiseksi.');logAction('PIN_RESET_REQUEST','Käyttäjä pyysi PIN-koodin palautusta');}
+
+        function logout(){logAction('LOGOUT','Käyttäjä kirjautui ulos');clearSessionTimer();sessionStorage.removeItem('vahingot');sessionStorage.removeItem('auditLog');location.reload();}
+
+        function startSessionTimer(){clearSessionTimer();updateSessionTime();sessionTimer=setInterval(updateSessionTime,1000);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';document.getElementById('sessionWarning').onclick=()=>{document.getElementById('sessionWarning').style.display='none';clearTimeout(warningTimer);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';},SESSION_TIMEOUT-WARNING_TIME);};},SESSION_TIMEOUT-WARNING_TIME);setTimeout(logout,SESSION_TIMEOUT);}
+
+        function updateSessionTime(){const r=Math.floor((SESSION_TIMEOUT-((new Date()-new Date(sessionStorage.getItem('loginTime')||new Date()))/1000)*1000)/1000);const m=Math.floor(r/60);const s=r%60;document.getElementById('sessionTime').textContent=`${m}:${String(s).padStart(2,'0')}`;}
+
+        function clearSessionTimer(){clearInterval(sessionTimer);clearTimeout(warningTimer);}
+
+        function logAction(action,details){const log={time:new Date().toLocaleString('fi-FI'),action:action,details:details,user:'Järmo'};auditLog.push(log);sessionStorage.setItem('auditLog',JSON.stringify(auditLog));}
+
         function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
         function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value,filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila))).sort((a,b)=>dateToNum(b.vahinkopäivä)-dateToNum(a.vahinkopäivä));t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
 
         function updateStats(){const k=vahingot.filter(v=>v.käsittelyn_tila==='Käsitelty').length,ks=vahingot.filter(v=>v.käsittelyn_tila==='Käsittelyssä').length,a=vahingot.filter(v=>v.käsittelyn_tila==='Arkistoitu').length,o=vahingot.filter(v=>!v.käsittelyn_tila).length;document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Yhteensä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${vahingot.length}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsitellyt</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${k}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Käsittelyssä</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${ks}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Arkistoidut</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${a}</div></div><div class="stat-card"><div style="font-size:0.75rem;text-transform:uppercase;color:var(--text-secondary);font-weight:600">Avoimet</div><div style="font-size:2rem;font-weight:700;color:var(--navy);margin-top:0.5rem">${o}</div></div>`;}
 
-        function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('[id$="Tab"]').forEach(d=>d.style.display='none');if(t==='list'){document.getElementById('listTab').style.display='flex';document.querySelector('[onclick="switchTab(\'list\')"]').classList.add('active');}else{document.getElementById('summaryTab').style.display='block';document.querySelector('[onclick="switchTab(\'summary\')"]').classList.add('active');updateStats();}}
+        function switchTab(t){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('[id$="Tab"]').forEach(d=>d.style.display='none');if(t==='list'){document.getElementById('listTab').style.display='flex';document.querySelector('[onclick="switchTab(\'list\')"]').classList.add('active');}else if(t==='summary'){document.getElementById('summaryTab').style.display='block';document.querySelector('[onclick="switchTab(\'summary\')"]').classList.add('active');updateStats();}else{document.getElementById('auditTab').style.display='block';document.querySelector('[onclick="switchTab(\'audit\')"]').classList.add('active');renderAuditLog();}}
+
+        function renderAuditLog(){const h=auditLog.map(l=>`<div style="border-bottom:1px solid var(--gray-200);padding:1rem;"><div style="font-weight:600;color:var(--navy)">${l.action}</div><div style="font-size:0.9rem;color:var(--text-secondary)">${l.details}</div><div style="font-size:0.8rem;color:#999">${l.time}</div></div>`).join('');document.getElementById('auditLog').innerHTML=h;}
 
         function openModal(i){currentVahinkoId=i;const v=vahingot.find(x=>x.id===i);document.getElementById('modalTitle').textContent=v.kohde;document.getElementById('modalPäivä').value=v.vahinkopäivä?v.vahinkopäivä.split('.').reverse().join('-'):'';document.getElementById('modalKohde').value=v.kohde;document.getElementById('modalTyyppi').value=v.tyyppi;document.getElementById('modalTila').value=v.käsittelyn_tila;document.getElementById('modalTunnus').value=v.vahinkotunnus;document.getElementById('muistiinpanot').innerHTML=v.muistiinpanot.map((m,idx)=>`<div class="muistiinpano"><div>"${m}"</div><button class="muistiinpano-btn" onclick="poistaMuistiinpano(${idx})">Poista</button></div>`).join('');document.getElementById('uusiMuistiinpano').value='';const liitteetHtml=v.liitteet.map((l,idx)=>{const isImage=l.name.match(/\.(jpg|jpeg|png|gif|webp)$/i);const preview=isImage?`<div class="liite-preview"><img src="${l.data}" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten"></div>`:`<div class="liite-preview teksti" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten">📄</div>`;const previewText=isImage?'':`<div class="liite-preview-text">${l.data.substring(0,100)}${l.data.length>100?'...':''}</div>`;return`<div class="liite-item">${preview}<div class="liite-info"><div class="liite-name">${l.name}</div>${previewText}<button class="muistiinpano-btn" onclick="poistaLiite(${idx})">Poista</button></div></div>`}).join('');document.getElementById('liitteet').innerHTML=liitteetHtml||'<p style="color:#999">Ei liitteitä</p>';document.getElementById('attachmentOptions').style.display='none';document.getElementById('modal').classList.add('active');}
 
-        function closeModal(){document.getElementById('modal').classList.remove('active');localStorage.setItem('vahingot',JSON.stringify(vahingot));}
+        function closeModal(){document.getElementById('modal').classList.remove('active');saveData();}
 
-        function saveField(f,v){const va=vahingot.find(x=>x.id===currentVahinkoId);if(va){if(f==='vahinkopäivä'){va.vahinkopäivä=v?v.split('-').reverse().join('.'):''}else{va[f]=v}renderTable();}}
+        function saveField(f,v){const va=vahingot.find(x=>x.id===currentVahinkoId);if(va){if(f==='vahinkopäivä'){va.vahinkopäivä=v?v.split('-').reverse().join('.'):''}else{va[f]=v}renderTable();logAction('EDIT',`Vahinko ${va.kohde} muokattu (${f})`)}}
 
-        function lisääMuistiinpano(){const t=document.getElementById('uusiMuistiinpano').value.trim();if(t){vahingot.find(x=>x.id===currentVahinkoId).muistiinpanot.push(t);openModal(currentVahinkoId);}}
+        function lisääMuistiinpano(){const t=document.getElementById('uusiMuistiinpano').value.trim();if(t){vahingot.find(x=>x.id===currentVahinkoId).muistiinpanot.push(t);logAction('ADD_NOTE',`Muistiinpano lisätty vahinkoon ${vahingot.find(x=>x.id===currentVahinkoId).kohde}`);openModal(currentVahinkoId);}}
 
         function poistaMuistiinpano(i){vahingot.find(x=>x.id===currentVahinkoId).muistiinpanot.splice(i,1);openModal(currentVahinkoId);}
 
-        function lisääLiite(){const f=document.getElementById('fileInput').files[0];if(f){const r=new FileReader();r.onload=e=>{vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:f.name,data:e.target.result});openModal(currentVahinkoId);};r.readAsDataURL(f);document.getElementById('fileInput').value='';}}
+        function lisääLiite(){const f=document.getElementById('fileInput').files[0];if(f){const r=new FileReader();r.onload=e=>{vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:f.name,data:e.target.result});logAction('ADD_FILE',`Tiedosto ${f.name} lisätty`);openModal(currentVahinkoId);};r.readAsDataURL(f);document.getElementById('fileInput').value='';}}
 
         function poistaLiite(i){vahingot.find(x=>x.id===currentVahinkoId).liitteet.splice(i,1);openModal(currentVahinkoId);}
 
@@ -182,21 +250,24 @@
 
         function showAttachmentOptions(){document.getElementById('attachmentOptions').style.display=document.getElementById('attachmentOptions').style.display==='none'?'flex':'none';}
 
-        function pasteText(){const t=prompt('Liitä teksti:');if(t){vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:'[Teksti] '+new Date().toLocaleString('fi-FI'),data:t});openModal(currentVahinkoId);}}
+        function pasteText(){const t=prompt('Liitä teksti:');if(t){vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:'[Teksti] '+new Date().toLocaleString('fi-FI'),data:t});logAction('ADD_TEXT','Teksti liitetty');openModal(currentVahinkoId);}}
 
-        function lisääUusiVahinko(){const k=prompt('Kohde:');if(!k)return;const t=prompt('Tyyppi (Ajoneuvovahinko/Liikennevahinko/Omaisuusvahinko):');if(!t)return;const u={id:'UUS-'+Date.now(),vahinkopäivä:new Date().toLocaleDateString('fi-FI'),kohde:k,tyyppi:t,käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]};vahingot.push(u);renderTable();updateStats();openModal(u.id);}
+        function lisääUusiVahinko(){const k=prompt('Kohde:');if(!k)return;const t=prompt('Tyyppi (Ajoneuvovahinko/Liikennevahinko/Omaisuusvahinko):');if(!t)return;const u={id:'UUS-'+Date.now(),vahinkopäivä:new Date().toLocaleDateString('fi-FI'),kohde:k,tyyppi:t,käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]};vahingot.push(u);logAction('CREATE','Uusi vahinko luotu: '+k);renderTable();updateStats();openModal(u.id);}
 
-        function exportData(){const c=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');const b=new Blob([c],{type:'text/csv'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_${new Date().toISOString().slice(0,10)}.csv`;l.click();}
+        function exportData(){const c=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');const b=new Blob([c],{type:'text/csv'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_${new Date().toISOString().slice(0,10)}.csv`;l.click();logAction('EXPORT','Excel viety');}
 
-        function lataVarmuuskopio(){const j=JSON.stringify(vahingot,null,2),b=new Blob([j],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_varmuuskopio_${new Date().toISOString().slice(0,10)}.json`;l.click();}
+        function lataVarmuuskopio(){const j=JSON.stringify(vahingot,null,2),b=new Blob([j],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_varmuuskopio_${new Date().toISOString().slice(0,10)}.json`;l.click();logAction('BACKUP','Varmuuskopio ladattu');}
 
-        function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);renderTable();updateStats();alert('Varmuuskopio palautettu!');}catch(err){alert('Virhe!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
+        function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);renderTable();updateStats();alert('Varmuuskopio palautettu!');logAction('RESTORE','Varmuuskopio palautettu');}catch(err){alert('Virhe!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
 
-        document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('typeFilter').addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);
+        function deleteAllData(){if(confirm('Oletko varma? Kaikki tiedot poistetaan (GDPR). Tätä ei voi perua.')){vahingot.length=0;renderTable();updateStats();saveData();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.')}}
 
-        const s=localStorage.getItem('vahingot');if(s){const l=JSON.parse(s);l.forEach(item=>{const e=vahingot.find(v=>v.id===item.id);if(e){e.muistiinpanot=item.muistiinpanot||[];e.liitteet=item.liitteet||[];e.vahinkopäivä=item.vahinkopäivä||e.vahinkopäivä;e.käsittelyn_tila=item.käsittelyn_tila||e.käsittelyn_tila;e.vahinkotunnus=item.vahinkotunnus||e.vahinkotunnus;}});}
+        function saveData(){sessionStorage.setItem('vahingot',JSON.stringify(vahingot));}
+        function loadData(){const d=JSON.parse(sessionStorage.getItem('vahingot')||'[]');if(d.length>0){vahingot.length=0;vahingot.push(...d);}}
 
-        renderTable();updateStats();
+        sessionStorage.setItem('loginTime',new Date().getTime());
+        initPinInput();
+        document.querySelector('.pin-digit').focus();
     </script>
 </body>
 </html>
