@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a4272">
+    <title>Vahinkorekisteri — Vakuutusmeklari</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Vahinkorekisteri%22,%22short_name%22:%22Vahingot%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%230a4272%22}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0a4272;
+            --gold: #d4af37;
+            --light-navy: #1a5a9e;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, #f0f4f8 100%);
+            color: var(--text-primary);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(10, 66, 114, 0.15);
+            border-bottom: 3px solid var(--gold);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        /* MAIN CONTAINER */
+        main {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        aside {
+            width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-left: 4px solid var(--gold);
+        }
+
+        aside h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        /* CONTENT AREA */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 0;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.2rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .tab-btn:hover {
+            color: var(--navy);
+            background: var(--gray-50);
+        }
+
+        .tab-btn.active {
+            color: var(--navy);
+            border-bottom-color: var(--gold);
+        }
+
+        /* TAULUKKO */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(90deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+            cursor: pointer;
+        }
+
+        tbody tr.käsitelty {
+            opacity: 0.7;
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.käsitelty {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge.käsitteillä {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.avoin {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* DETALJI-PANEELI */
+        .detail-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--gold);
+        }
+
+        .detail-panel h3 {
+            color: var(--navy);
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .detail-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-field label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .detail-field input,
+        .detail-field textarea,
+        .detail-field select {
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .detail-field input:focus,
+        .detail-field textarea:focus,
+        .detail-field select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .detail-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* LIITTEET */
+        .attachments-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .attachments-section h4 {
+            font-size: 0.9rem;
+            color: var(--navy);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .attachment-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .attachment-item {
+            background: var(--gray-50);
+            border: 2px dashed var(--gray-300);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.8rem;
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .attachment-item:hover {
+            border-color: var(--gold);
+            background: #fffbf0;
+        }
+
+        .attachment-item.filled {
+            border-style: solid;
+            border-color: var(--gold);
+            background: #fffbf0;
+        }
+
+        .attachment-item.filled .icon {
+            color: var(--gold);
+        }
+
+        .attachment-item .icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.35rem;
+            transition: all 0.2s ease;
+        }
+
+        .attachment-item .name {
+            word-break: break-word;
+            color: var(--text-primary);
+            margin: 0.5rem 0 0 0;
+        }
+
+        .attachment-item .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .attachment-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .file-upload-input {
+            display: none;
+        }
+
+        /* BUTTONS */
+        button {
+            font-family: 'Outfit', sans-serif;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(10, 66, 114, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 66, 114, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--gold);
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .stat-card .detail {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+        }
+
+        /* HAKU */
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+
+        /* RESPONSIVUUS */
+        @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100%;
+            }
+
+            .detail-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1.5rem 1rem;
+            }
+
+            header h1 {
+                font-size: 1.3rem;
+            }
+
+            main {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            aside {
+                padding: 1rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.7rem;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .attachment-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+
+        /* ANIMAATIOT */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .detail-panel {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            color: var(--navy);
+            margin-bottom: 1rem;
+        }
+
+        .modal-content input {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📋 Vahinkorekisteri</h1>
+        <p>Vakuutusmeklarin vahinkojen hallintajärjestelmä</p>
+    </header>
+
+    <main>
+        <aside>
+            <h2>Suodattimet</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Hae kohteella...">
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.5rem;">Vahinkotyppi</label>
+                <select id="typeFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: 'Outfit', sans-serif;">
+                    <option value="">Kaikki</option>
+                    <option value="Ajoneuvovahinko">Ajoneuvovahinko</option>
+                    <option value="Kuljetustapahtuma">Kuljetustapahtuma</option>
+                    <option value="Muu">Muu</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.5rem;">Käsittelyn tila</label>
+                <select id="statusFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: 'Outfit', sans-serif;">
+                    <option value="">Kaikki</option>
+                    <option value="Käsitelty">Käsitelty</option>
+                    <option value="">Käsitteillä</option>
+                    <option value="Avoin">Avoin</option>
+                </select>
+            </div>
+
+            <div id="asideStats" class="stats-grid" style="grid-template-columns: 1fr;">
+                <!-- Täytetään JavaScriptillä -->
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button class="btn-primary" onclick="addNewVahinko()" style="width: 100%;">+ Uusi vahinko</button>
+                <button class="btn-secondary" onclick="exportData()" style="width: 100%; margin-top: 0.75rem;">Vie Excel</button>
+            </div>
+        </aside>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('list')">Kooste</button>
+                <button class="tab-btn" onclick="switchTab('summary')">Yhteenveto</button>
+            </div>
+
+            <!-- KOOSTE-VÄLILEHTI -->
+            <div id="listTab" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vahinkopäivä</th>
+                            <th>Kohde</th>
+                            <th>Tyyppi</th>
+                            <th>Tila</th>
+                            <th>Vahinkotunnus</th>
+                            <th>Liitteet</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Täytetään JavaScriptillä -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- YHTEENVETO-VÄLILEHTI -->
+            <div id="summaryTab" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Yhteensä vahinkoja</div>
+                        <div class="value" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Käsitellyt</div>
+                        <div class="value" id="käsiteltyCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Käsitteillä</div>
+                        <div class="value" id="käsittelyssäCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Avoimet</div>
+                        <div class="value" id="avoinCount">0</div>
+                    </div>
+                </div>
+
+                <div id="detailPanel" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // TESTIDATAA - Excel-tiedostosta kerätty
+        const defaultVahingot = [
+            { id: 'ZOO-340', vahinkopäivä: '04.04.2026', kohde: 'ZOO-340', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: '', vahinkotunnus: '' },
+            { id: 'IZB-283', vahinkopäivä: '04.11.2025', kohde: 'IZB-283', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '' },
+            { id: 'EUH-604', vahinkopäivä: '01.02.2026', kohde: 'EUH-604', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-06478-6' },
+            { id: 'SPH-912', vahinkopäivä: '12.01.2026', kohde: 'SPH-912', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: '', vahinkotunnus: '' },
+            { id: 'XPT-996', vahinkopäivä: '14.02.2026', kohde: 'XPT-996', tyyppi: 'Ajoneuvovahinko', käsittelyn_tila: 'Käsitelty', vahinkotunnus: '24-40326-03810-7' },
+        ];
+
+        let vahingot = [];
+
+        // ALUSTUS
+        function init() {
+            loadFromStorage();
+            renderTable();
+            updateStats();
+        }
+
+        // STORAGE
+        function loadFromStorage() {
+            const stored = localStorage.getItem('vahingot');
+            if (stored) {
+                vahingot = JSON.parse(stored);
+            } else {
+                vahingot = defaultVahingot.map(v => ({
+                    ...v,
+                    muistiinpanot: '',
+                    liitteet: []
+                }));
+                saveToStorage();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('vahingot', JSON.stringify(vahingot));
+        }
+
+        // RENDERÖINTI
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filtered = vahingot.filter(v => {
+                const matchSearch = v.kohde.toLowerCase().includes(searchText);
+                const matchType = !typeFilter || v.tyyppi === typeFilter;
+                const matchStatus = !statusFilter || v.käsittelyn_tila === statusFilter;
+                return matchSearch && matchType && matchStatus;
+            });
+
+            tableBody.innerHTML = filtered.map(v => `
+                <tr class="${v.käsittelyn_tila === 'Käsitelty' ? 'käsitelty' : ''}" onclick="openDetailModal('${v.id}')">
+                    <td>${v.vahinkopäivä}</td>
+                    <td><strong>${v.kohde}</strong></td>
+                    <td>${v.tyyppi}</td>
+                    <td>
+                        <span class="badge ${getBadgeClass(v.käsittelyn_tila)}">
+                            ${v.käsittelyn_tila || 'Avoin'}
+                        </span>
+                    </td>
+                    <td>${v.vahinkotunnus || '—'}</td>
+                    <td>${v.liitteet ? v.liitteet.length : 0} 📎</td>
+                </tr>
+            `).join('');
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Ei tuloksia</p></td></tr>';
+            }
+        }
+
+        function getBadgeClass(tila) {
+            if (tila === 'Käsitelty') return 'käsitelty';
+            if (tila === 'Käsitteillä') return 'käsitteillä';
+            return 'avoin';
+        }
+
+        function updateStats() {
+            const käsitelty = vahingot.filter(v => v.käsittelyn_tila === 'Käsitelty').length;
+            const käsittelyssä = vahingot.filter(v => v.käsittelyn_tila === 'Käsitteillä').length;
+            const avoin = vahingot.filter(v => !v.käsittelyn_tila || v.käsittelyn_tila === 'Avoin').length;
+
+            document.getElementById('totalCount').textContent = vahingot.length;
+            document.getElementById('käsiteltyCount').textContent = käsitelty;
+            document.getElementById('käsittelyssäCount').textContent = käsittelyssä;
+            document.getElementById('avoinCount').textContent = avoin;
+
+            const asideStats = document.getElementById('asideStats');
+            asideStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Näytetään</div>
+                    <div class="value">${document.querySelectorAll('#tableBody tr').length}</div>
+                </div>
+            `;
+        }
+
+        // MODAALI
+        function openDetailModal(id) {
+            const vahinko = vahingot.find(v => v.id === id);
+            if (!vahinko) return;
+
+            const modal = document.getElementById('detailModal');
+            const modalBody = document.getElementById('modalBody');
+
+            const liitteetHTML = (vahinko.liitteet || []).map((liite, idx) => `
+                <div class="attachment-item filled">
+                    <div class="icon">${getFileIcon(liite.type)}</div>
+                    <div class="name">${liite.name.substring(0, 15)}...</div>
+                    <button class="remove-btn" onclick="removeAttachment('${id}', ${idx})">✕</button>
+                </div>
+            `).join('');
+
+            modalBody.innerHTML = `
+                <h3>${vahinko.kohde}</h3>
+                <div class="detail-content">
+                    <div class="detail-field">
+                        <label>Vahinkopäivä</label>
+                        <input type="date" value="${dateToInput(vahinko.vahinkopäivä)}" onchange="updateField('${id}', 'vahinkopäivä', this.value)">
+                    </div>
+                    <div class="detail-field">
+                        <label>Käsittelyn tila</label>
+                        <select onchange="updateField('${id}', 'käsittelyn_tila', this.value)">
+                            <option value="">—</option>
+                            <option value="Käsittelyssä" ${vahinko.käsittelyn_tila === 'Käsittelyssä' ? 'selected' : ''}>Käsittelyssä</option>
+                            <option value="Käsitelty" ${vahinko.käsittelyn_tila === 'Käsitelty' ? 'selected' : ''}>Käsitelty</option>
+                        </select>
+                    </div>
+                    <div class="detail-field">
+                        <label>Vahinkotunnus</label>
+                        <input type="text" value="${vahinko.vahinkotunnus}" onchange="updateField('${id}', 'vahinkotunnus', this.value)">
+                    </div>
+                    <div class="detail-field">
+                        <label>Vahinkotyppi</label>
+                        <input type="text" value="${vahinko.tyyppi}" onchange="updateField('${id}', 'tyyppi', this.value)">
+                    </div>
+                </div>
+
+                <div class="attachments-section">
+                    <h4>Liitteet</h4>
+                    <div class="attachment-list">
+                        ${liitteetHTML || '<p style="color: var(--text-secondary); font-size: 0.85rem;">Ei liitteitä</p>'}
+                    </div>
+                    <button class="btn-secondary" onclick="triggerFileUpload('${id}')">+ Lisää liite</button>
+                    <input type="file" id="fileInput-${id}" class="file-upload-input" onchange="handleFileUpload('${id}', event)" accept="image/*,.pdf,.doc,.docx">
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <label style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 0.5rem;">Muistiinpanot</label>
+                    <textarea onchange="updateField('${id}', 'muistiinpanot', this.value)">${vahinko.muistiinpanot || ''}</textarea>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: right;">
+                    <button class="btn-secondary" onclick="closeModal()">Sulje</button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function updateField(id, field, value) {
+            const vahinko = vahingot.find(v => v.id === id);
+            if (vahinko) {
+                vahinko[field] = value;
+                saveToStorage();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function triggerFileUpload(id) {
+            document.getElementById(`fileInput-${id}`).click();
+        }
+
+        function handleFileUpload(id, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const vahinko = vahingot.find(v => v.id === id);
+                if (!vahinko.liitteet) vahinko.liitteet = [];
+
+                vahinko.liitteet.push({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: e.target.result // base64
+                });
+
+                saveToStorage();
+                openDetailModal(id); // Päivitä modaali
+                renderTable();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeAttachment(id, idx) {
+            const vahinko = vahingot.find(v => v.id === id);
+            if (vahinko && vahinko.liitteet) {
+                vahinko.liitteet.splice(idx, 1);
+                saveToStorage();
+                openDetailModal(id);
+                renderTable();
+            }
+        }
+
+        function getFileIcon(type) {
+            if (type.includes('image')) return '🖼️';
+            if (type.includes('pdf')) return '📄';
+            if (type.includes('word') || type.includes('document')) return '📋';
+            return '📎';
+        }
+
+        function dateToInput(dateStr) {
+            if (!dateStr) return '';
+            const [d, m, y] = dateStr.split('.');
+            return `${y}-${m}-${d}`;
+        }
+
+        function addNewVahinko() {
+            const id = prompt('Syötä vahinkotunnus (esim. ABC-123):');
+            if (!id) return;
+
+            const kohde = prompt('Syötä kohde:');
+            if (!kohde) return;
+
+            vahingot.push({
+                id,
+                kohde,
+                vahinkopäivä: new Date().toLocaleDateString('fi-FI'),
+                tyyppi: 'Ajoneuvovahinko',
+                käsittelyn_tila: '',
+                vahinkotunnus: '',
+                muistiinpanot: '',
+                liitteet: []
+            });
+
+            saveToStorage();
+            renderTable();
+            updateStats();
+            alert('Vahinko lisätty!');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('div[id$="Tab"]').forEach(d => d.style.display = 'none');
+
+            if (tab === 'list') {
+                document.getElementById('listTab').style.display = 'block';
+                document.querySelector('[onclick="switchTab(\'list\')"]').classList.add('active');
+            } else {
+                document.getElementById('summaryTab').style.display = 'block';
+                document.querySelector('[onclick="switchTab(\'summary\')"]').classList.add('active');
+            }
+        }
+
+        function exportData() {
+            const csv = [
+                ['Vahinkopäivä', 'Kohde', 'Tyyppi', 'Käsittelyn tila', 'Vahinkotunnus', 'Muistiinpanot'],
+                ...vahingot.map(v => [
+                    v.vahinkopäivä,
+                    v.kohde,
+                    v.tyyppi,
+                    v.käsittelyn_tila || '',
+                    v.vahinkotunnus || '',
+                    v.muistiinpanot || ''
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `vahingot_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+        }
+
+        // SUODATTIMET
+        document.getElementById('searchInput').addEventListener('input', () => {
+            renderTable();
+            updateStats();
+        });
+
+        document.getElementById('typeFilter').addEventListener('change', () => {
+            renderTable();
+            updateStats();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', () => {
+            renderTable();
+            updateStats();
+        });
+
+        // START
+        init();
+    </script>
+</body>
+</html>
