@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.2</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.3</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -80,6 +80,13 @@
         .preview-content img { max-width: 100%; height: auto; }
         .preview-content pre { background: var(--gray-50); padding: 1rem; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
         .storage-info { background: #e7f3ff; border-left: 4px solid var(--navy); padding: 1rem; margin-bottom: 1rem; border-radius: 6px; font-size: 0.9rem; }
+        .pin-verify-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1001; align-items: center; justify-content: center; }
+        .pin-verify-modal.active { display: flex; }
+        .pin-verify-content { background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+        .pin-verify-content h3 { color: var(--navy); margin-bottom: 1.5rem; }
+        .verify-pin-input { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+        .verify-pin-digit { width: 50px; height: 50px; font-size: 2rem; text-align: center; border: 2px solid var(--gray-300); border-radius: 8px; font-weight: 700; }
+        .verify-pin-digit:focus { outline: none; border-color: var(--gold); background: #fffbf0; }
         @media (max-width: 1024px) { main { flex-direction: column; } aside { width: 100%; } }
     </style>
 </head>
@@ -102,7 +109,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.2</h1>
+                <h1>📋 Vahinkorekisteri v6.3</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -126,7 +133,7 @@
                 <button class="btn-primary" onclick="lataVarmuuskopio()">⬇ Lataa varmuuskopio</button>
                 <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Palauta varmuuskopio</button>
                 <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
-                <button class="btn-danger" onclick="deleteAllData()">🗑 Poista kaikki (GDPR)</button>
+                <button class="btn-danger" onclick="verifyPINForDelete()">🗑 Poista kaikki (GDPR)</button>
             </aside>
 
             <div class="content">
@@ -167,7 +174,17 @@
         <button onclick="closePreview()" style="position: absolute; top: 1rem; right: 1rem; background: white; color: var(--navy); padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer;">✕</button>
     </div>
 
-    <div class="version">v6.2</div>
+    <div id="pinVerifyModal" class="pin-verify-modal">
+        <div class="pin-verify-content">
+            <h3>🔐 Vahvista PIN-koodi</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Syötä PIN poistaaksesi kaikki tiedot:</p>
+            <div class="verify-pin-input" id="verifyPinInput"></div>
+            <button class="btn-danger" onclick="confirmDelete()" style="margin-bottom: 0.75rem;">Poista kaikki tiedot</button>
+            <button class="btn-secondary" onclick="closePinVerifyModal()" style="margin-bottom: 0;">Peruuta</button>
+        </div>
+    </div>
+
+    <div class="version">v6.3</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
     <script>
@@ -269,6 +286,14 @@
 
         function logAction(action,details){const log={time:new Date().toLocaleString('fi-FI'),action:action,details:details,user:'Järmo'};auditLog.push(log);}
 
+        function verifyPINForDelete(){const p=document.getElementById('verifyPinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='verify-pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handleVerifyPinInput(e,i);p.appendChild(d);}document.getElementById('pinVerifyModal').classList.add('active');document.querySelector('.verify-pin-digit').focus();}
+
+        function handleVerifyPinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.verify-pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3)document.querySelectorAll('.verify-pin-digit')[i+1].focus();}}
+
+        function confirmDelete(){const pins=Array.from(document.querySelectorAll('.verify-pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){if(confirm('Oletko TÄYSIN varma? Kaikki tiedot poistetaan pysyvästi (GDPR). Tätä ei voi perua.')){vahingot.length=0;saveToIndexedDB([]);renderTable();updateStats();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.');closePinVerifyModal();}}else{alert('Väärä PIN');Array.from(document.querySelectorAll('.verify-pin-digit')).forEach(d=>{d.value='';});document.querySelector('.verify-pin-digit').focus();}}
+
+        function closePinVerifyModal(){document.getElementById('pinVerifyModal').classList.remove('active');}
+
         function syncToICloud(){const json=JSON.stringify(vahingot,null,2);const blob=new Blob([json],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`vahinkorekisteri_${new Date().toISOString().slice(0,10)}.json`;link.click();alert('Tiedosto ladattu! Pudota se iCloud Drive sovellukseen tai Finder:iin.');logAction('ICLOUD_SYNC','Tiedot viedty iCloud:iin');}
 
         function exportExcel(){const ws_data=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])];const ws=XLSX.utils.aoa_to_sheet(ws_data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vahingot');ws['!cols']=[{wch:15},{wch:15},{wch:20},{wch:15},{wch:20}];XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);logAction('EXPORT','Excel viety');}
@@ -309,8 +334,6 @@
         function lataVarmuuskopio(){const j=JSON.stringify(vahingot,null,2),b=new Blob([j],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_varmuuskopio_${new Date().toISOString().slice(0,10)}.json`;l.click();logAction('BACKUP','Varmuuskopio ladattu');}
 
         function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);saveToIndexedDB(vahingot);renderTable();updateStats();alert('Varmuuskopio palautettu!');logAction('RESTORE','Varmuuskopio palautettu');}catch(err){alert('Virhe!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
-
-        function deleteAllData(){if(confirm('Oletko varma? Kaikki tiedot poistetaan (GDPR). Tätä ei voi perua.')){vahingot.length=0;saveToIndexedDB([]);renderTable();updateStats();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.')}}
 
         async function loadData(){const loaded=await loadFromIndexedDB();if(loaded.length>0){vahingot.length=0;vahingot.push(...loaded);}renderTable();updateStats();document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('typeFilter').addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);}
 
