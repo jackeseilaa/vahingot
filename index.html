@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.0</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.1</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -52,6 +52,7 @@
         .btn-primary { background: linear-gradient(135deg, var(--navy) 0%, var(--light-navy) 100%); color: white; width: 100%; margin-bottom: 0.75rem; }
         .btn-secondary { background: var(--gray-600); color: white; width: 100%; margin-bottom: 0.75rem; }
         .btn-danger { background: #dc3545; color: white; width: 100%; margin-bottom: 0.75rem; }
+        .btn-success { background: #28a745; color: white; width: 100%; margin-bottom: 0.75rem; }
         .stat-card { background: white; border-radius: 12px; padding: 1.2rem; border-top: 4px solid var(--gold); }
         .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--navy); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -78,6 +79,7 @@
         .preview-content { background: white; border-radius: 12px; padding: 2rem; max-width: 90vw; max-height: 90vh; overflow: auto; }
         .preview-content img { max-width: 100%; height: auto; }
         .preview-content pre { background: var(--gray-50); padding: 1rem; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .storage-info { background: #e7f3ff; border-left: 4px solid var(--navy); padding: 1rem; margin-bottom: 1rem; border-radius: 6px; font-size: 0.9rem; }
         @media (max-width: 1024px) { main { flex-direction: column; } aside { width: 100%; } }
     </style>
 </head>
@@ -100,7 +102,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.0</h1>
+                <h1>📋 Vahinkorekisteri v6.1</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -109,6 +111,9 @@
         <main>
             <aside>
                 <h2>Suodattimet</h2>
+                <div class="storage-info">
+                    📱 Tiedot tallennetaan pysyvästi IndexedDB:hen. Synkronoi iCloud Drive:lle alta.
+                </div>
                 <div class="search-box"><input type="text" id="searchInput" placeholder="Hae kohteella..."></div>
                 <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Vahinkotyppi</label>
                 <select id="typeFilter"><option value="">Kaikki</option><option value="Ajoneuvovahinko">Ajoneuvovahinko</option><option value="Liikennevahinko">Liikennevahinko</option><option value="Omaisuusvahinko">Omaisuusvahinko</option></select>
@@ -116,6 +121,7 @@
                 <select id="statusFilter"><option value="">Kaikki</option><option value="Käsitelty">Käsitelty</option><option value="Käsittelyssä">Käsittelyssä</option><option value="Arkistoitu">Arkistoitu</option><option value="avoin">Avoin</option></select>
                 <div id="asideStats" style="margin-top: 1.5rem;"></div>
                 <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
+                <button class="btn-success" onclick="syncToICloud()">☁️ Synkronoi iCloud:iin</button>
                 <button class="btn-primary" onclick="lataVarmuuskopio()">⬇ Lataa varmuuskopio</button>
                 <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Palauta varmuuskopio</button>
                 <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
@@ -161,9 +167,50 @@
         <button onclick="closePreview()" style="position: absolute; top: 1rem; right: 1rem; background: white; color: var(--navy); padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer;">✕</button>
     </div>
 
-    <div class="version">v6.0</div>
+    <div class="version">v6.1</div>
 
     <script>
+        // IndexedDB setup
+        let db = null;
+        const DB_NAME = 'VahinkorekisteriDB';
+        const STORE_NAME = 'vahingot';
+
+        function initIndexedDB(){
+            return new Promise((resolve, reject)=>{
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (e) => {
+                    const store = e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    store.createIndex('kohde', 'kohde', { unique: false });
+                };
+            });
+        }
+
+        function saveToIndexedDB(vahingot){
+            if(!db) return;
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.clear();
+            vahingot.forEach(v => store.add(v));
+        }
+
+        function loadFromIndexedDB(){
+            return new Promise((resolve) => {
+                if(!db) {
+                    resolve([]);
+                    return;
+                }
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+            });
+        }
+
         // Turvallisuus
         const DEFAULT_PIN = "1234";
         const SESSION_TIMEOUT = 15 * 60 * 1000;
@@ -201,17 +248,17 @@
             {id:'CKZ-391-3',vahinkopäivä:'',kohde:'CKZ-391',tyyppi:'Ajoneuvovahinko',käsittelyn_tila:'Käsitelty',vahinkotunnus:'',muistiinpanot:[],liitteet:[]}
         ];
 
-        let auditLog = JSON.parse(sessionStorage.getItem('auditLog') || '[]');
+        let auditLog = [];
 
         function initPinInput(){const p=document.getElementById('pinInput');p.innerHTML='';for(let i=0;i<4;i++){const d=document.createElement('input');d.type='password';d.className='pin-digit';d.maxLength='1';d.inputMode='numeric';d.onkeyup=(e)=>handlePinInput(e,i);p.appendChild(d);}}
 
         function handlePinInput(e,i){if(e.key==='Backspace'){e.target.value='';if(i>0)document.querySelectorAll('.pin-digit')[i-1].focus();}else if(/[0-9]/.test(e.key)){e.target.value=e.key;if(i<3)document.querySelectorAll('.pin-digit')[i+1].focus();}}
 
-        function loginWithPin(){if(isLocked){alert('Liian monta väärää yritystä. Ota yhteyttä: jacke.seilaa@gmail.com');return;}const pins=Array.from(document.querySelectorAll('.pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){logAction('LOGIN','Käyttäjä kirjautui sisään');document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='flex';startSessionTimer();loadData();renderTable();updateStats();document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('typeFilter').addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);}else{loginAttempts++;const remaining=3-loginAttempts;if(loginAttempts>=3){isLocked=true;logAction('LOGIN_FAILED','Liian monta väärää yritystä - lukittu');alert('PIN lukittu. Ota yhteyttä: jacke.seilaa@gmail.com');}else{document.getElementById('errorMsg').style.display='block';document.getElementById('errorMsg').textContent=`Väärä PIN. Yrityksiä jäljellä: ${remaining}`;Array.from(document.querySelectorAll('.pin-digit')).forEach(d=>{d.value='';});document.querySelectorAll('.pin-digit')[0].focus();logAction('LOGIN_FAILED',`Väärä PIN (yritys ${loginAttempts}/3)`);;}}}
+        function loginWithPin(){if(isLocked){alert('Liian monta väärää yritystä. Ota yhteyttä: jacke.seilaa@gmail.com');return;}const pins=Array.from(document.querySelectorAll('.pin-digit')).map(d=>d.value).join('');if(pins===DEFAULT_PIN){logAction('LOGIN','Käyttäjä kirjautui sisään');document.getElementById('loginScreen').style.display='none';document.getElementById('mainApp').style.display='flex';startSessionTimer();loadData();}else{loginAttempts++;const remaining=3-loginAttempts;if(loginAttempts>=3){isLocked=true;logAction('LOGIN_FAILED','Liian monta väärää yritystä - lukittu');alert('PIN lukittu. Ota yhteyttä: jacke.seilaa@gmail.com');}else{document.getElementById('errorMsg').style.display='block';document.getElementById('errorMsg').textContent=`Väärä PIN. Yrityksiä jäljellä: ${remaining}`;Array.from(document.querySelectorAll('.pin-digit')).forEach(d=>{d.value='';});document.querySelectorAll('.pin-digit')[0].focus();logAction('LOGIN_FAILED',`Väärä PIN (yritys ${loginAttempts}/3)`);;}}}
 
         function forgotPin(e){e.preventDefault();alert('PIN palautuspyyntö lähetetään sähköpostiin: jacke.seilaa@gmail.com\n\nOta yhteyttä suoraan sähköpostilla PIN-koodin palauttamiseksi.');logAction('PIN_RESET_REQUEST','Käyttäjä pyysi PIN-koodin palautusta');}
 
-        function logout(){logAction('LOGOUT','Käyttäjä kirjautui ulos');clearSessionTimer();sessionStorage.removeItem('vahingot');sessionStorage.removeItem('auditLog');location.reload();}
+        function logout(){logAction('LOGOUT','Käyttäjä kirjautui ulos');clearSessionTimer();location.reload();}
 
         function startSessionTimer(){clearSessionTimer();updateSessionTime();sessionTimer=setInterval(updateSessionTime,1000);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';document.getElementById('sessionWarning').onclick=()=>{document.getElementById('sessionWarning').style.display='none';clearTimeout(warningTimer);warningTimer=setTimeout(()=>{document.getElementById('sessionWarning').style.display='block';},SESSION_TIMEOUT-WARNING_TIME);};},SESSION_TIMEOUT-WARNING_TIME);setTimeout(logout,SESSION_TIMEOUT);}
 
@@ -219,7 +266,9 @@
 
         function clearSessionTimer(){clearInterval(sessionTimer);clearTimeout(warningTimer);}
 
-        function logAction(action,details){const log={time:new Date().toLocaleString('fi-FI'),action:action,details:details,user:'Järmo'};auditLog.push(log);sessionStorage.setItem('auditLog',JSON.stringify(auditLog));}
+        function logAction(action,details){const log={time:new Date().toLocaleString('fi-FI'),action:action,details:details,user:'Järmo'};auditLog.push(log);}
+
+        function syncToICloud(){const json=JSON.stringify(vahingot,null,2);const blob=new Blob([json],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`vahinkorekisteri_${new Date().toISOString().slice(0,10)}.json`;link.click();alert('Tiedosto ladattu! Pudota se iCloud Drive sovellukseen tai Finder:iin.');logAction('ICLOUD_SYNC','Tiedot viedty iCloud:iin');}
 
         function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
         function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value,filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila))).sort((a,b)=>dateToNum(b.vahinkopäivä)-dateToNum(a.vahinkopäivä));t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
@@ -232,7 +281,7 @@
 
         function openModal(i){currentVahinkoId=i;const v=vahingot.find(x=>x.id===i);document.getElementById('modalTitle').textContent=v.kohde;document.getElementById('modalPäivä').value=v.vahinkopäivä?v.vahinkopäivä.split('.').reverse().join('-'):'';document.getElementById('modalKohde').value=v.kohde;document.getElementById('modalTyyppi').value=v.tyyppi;document.getElementById('modalTila').value=v.käsittelyn_tila;document.getElementById('modalTunnus').value=v.vahinkotunnus;document.getElementById('muistiinpanot').innerHTML=v.muistiinpanot.map((m,idx)=>`<div class="muistiinpano"><div>"${m}"</div><button class="muistiinpano-btn" onclick="poistaMuistiinpano(${idx})">Poista</button></div>`).join('');document.getElementById('uusiMuistiinpano').value='';const liitteetHtml=v.liitteet.map((l,idx)=>{const isImage=l.name.match(/\.(jpg|jpeg|png|gif|webp)$/i);const preview=isImage?`<div class="liite-preview"><img src="${l.data}" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten"></div>`:`<div class="liite-preview teksti" onclick="previewLiite(${idx})" title="Klikkaa esikatselua varten">📄</div>`;const previewText=isImage?'':`<div class="liite-preview-text">${l.data.substring(0,100)}${l.data.length>100?'...':''}</div>`;return`<div class="liite-item">${preview}<div class="liite-info"><div class="liite-name">${l.name}</div>${previewText}<button class="muistiinpano-btn" onclick="poistaLiite(${idx})">Poista</button></div></div>`}).join('');document.getElementById('liitteet').innerHTML=liitteetHtml||'<p style="color:#999">Ei liitteitä</p>';document.getElementById('attachmentOptions').style.display='none';document.getElementById('modal').classList.add('active');}
 
-        function closeModal(){document.getElementById('modal').classList.remove('active');saveData();}
+        function closeModal(){document.getElementById('modal').classList.remove('active');saveToIndexedDB(vahingot);}
 
         function saveField(f,v){const va=vahingot.find(x=>x.id===currentVahinkoId);if(va){if(f==='vahinkopäivä'){va.vahinkopäivä=v?v.split('-').reverse().join('.'):''}else{va[f]=v}renderTable();logAction('EDIT',`Vahinko ${va.kohde} muokattu (${f})`)}}
 
@@ -258,16 +307,14 @@
 
         function lataVarmuuskopio(){const j=JSON.stringify(vahingot,null,2),b=new Blob([j],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_varmuuskopio_${new Date().toISOString().slice(0,10)}.json`;l.click();logAction('BACKUP','Varmuuskopio ladattu');}
 
-        function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);renderTable();updateStats();alert('Varmuuskopio palautettu!');logAction('RESTORE','Varmuuskopio palautettu');}catch(err){alert('Virhe!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
+        function palauta(){const f=document.getElementById('restoreFile').files[0];if(f){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);vahingot.length=0;vahingot.push(...d);saveToIndexedDB(vahingot);renderTable();updateStats();alert('Varmuuskopio palautettu!');logAction('RESTORE','Varmuuskopio palautettu');}catch(err){alert('Virhe!');}};r.readAsText(f);document.getElementById('restoreFile').value='';}}
 
-        function deleteAllData(){if(confirm('Oletko varma? Kaikki tiedot poistetaan (GDPR). Tätä ei voi perua.')){vahingot.length=0;renderTable();updateStats();saveData();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.')}}
+        function deleteAllData(){if(confirm('Oletko varma? Kaikki tiedot poistetaan (GDPR). Tätä ei voi perua.')){vahingot.length=0;saveToIndexedDB([]);renderTable();updateStats();logAction('DELETE_ALL','Kaikki tiedot poistettu (GDPR pyynnön mukaisesti)');alert('Kaikki tiedot poistettu.')}}
 
-        function saveData(){sessionStorage.setItem('vahingot',JSON.stringify(vahingot));}
-        function loadData(){const d=JSON.parse(sessionStorage.getItem('vahingot')||'[]');if(d.length>0){vahingot.length=0;vahingot.push(...d);}}
+        async function loadData(){const loaded=await loadFromIndexedDB();if(loaded.length>0){vahingot.length=0;vahingot.push(...loaded);}renderTable();updateStats();document.getElementById('searchInput').addEventListener('input',renderTable);document.getElementById('typeFilter').addEventListener('change',renderTable);document.getElementById('statusFilter').addEventListener('change',renderTable);}
 
         sessionStorage.setItem('loginTime',new Date().getTime());
-        initPinInput();
-        document.querySelector('.pin-digit').focus();
+        initIndexedDB().then(()=>{initPinInput();document.querySelector('.pin-digit').focus();});
     </script>
 </body>
 </html>
