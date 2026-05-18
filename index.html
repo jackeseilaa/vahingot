@@ -439,6 +439,7 @@
 
             <div id="asideStats" class="stats-grid" style="grid-template-columns: 1fr; margin-top: 1.5rem;"></div>
 
+            <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
             <button class="btn-primary" onclick="exportData()">Vie Excel</button>
         </aside>
 
@@ -691,6 +692,29 @@
             const vahinko = vahingot.find(v => v.id === currentVahinkoId);
             vahinko.liitteet.splice(i, 1);
             openModal(currentVahinkoId);
+        }
+
+        function lisääUusiVahinko() {
+            const kohde = prompt('Kohde:');
+            if (!kohde) return;
+            const tyyppi = prompt('Tyyppi (Ajoneuvovahinko/Liikennevahinko/Omaisuusvahinko):');
+            if (!tyyppi) return;
+            
+            const uusi = {
+                id: 'UUS-' + Date.now(),
+                vahinkopäivä: new Date().toLocaleDateString('fi-FI'),
+                kohde: kohde,
+                tyyppi: tyyppi,
+                käsittelyn_tila: '',
+                vahinkotunnus: '',
+                muistiinpanot: [],
+                liitteet: []
+            };
+            
+            vahingot.push(uusi);
+            renderTable();
+            updateStats();
+            openModal(uusi.id);
         }
 
         function exportData() {
