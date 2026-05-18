@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.1</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -102,7 +102,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.1</h1>
+                <h1>📋 Vahinkorekisteri v6.2</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -122,10 +122,10 @@
                 <div id="asideStats" style="margin-top: 1.5rem;"></div>
                 <button class="btn-primary" onclick="lisääUusiVahinko()">+ Uusi vahinko</button>
                 <button class="btn-success" onclick="syncToICloud()">☁️ Synkronoi iCloud:iin</button>
+                <button class="btn-primary" onclick="exportExcel()">📊 Vie Excel</button>
                 <button class="btn-primary" onclick="lataVarmuuskopio()">⬇ Lataa varmuuskopio</button>
                 <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">⬆ Palauta varmuuskopio</button>
                 <input type="file" id="restoreFile" class="file-input" accept=".json" onchange="palauta()">
-                <button class="btn-secondary" onclick="exportData()">📊 Vie Excel</button>
                 <button class="btn-danger" onclick="deleteAllData()">🗑 Poista kaikki (GDPR)</button>
             </aside>
 
@@ -167,8 +167,9 @@
         <button onclick="closePreview()" style="position: absolute; top: 1rem; right: 1rem; background: white; color: var(--navy); padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer;">✕</button>
     </div>
 
-    <div class="version">v6.1</div>
+    <div class="version">v6.2</div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
     <script>
         // IndexedDB setup
         let db = null;
@@ -270,6 +271,8 @@
 
         function syncToICloud(){const json=JSON.stringify(vahingot,null,2);const blob=new Blob([json],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`vahinkorekisteri_${new Date().toISOString().slice(0,10)}.json`;link.click();alert('Tiedosto ladattu! Pudota se iCloud Drive sovellukseen tai Finder:iin.');logAction('ICLOUD_SYNC','Tiedot viedty iCloud:iin');}
 
+        function exportExcel(){const ws_data=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])];const ws=XLSX.utils.aoa_to_sheet(ws_data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vahingot');ws['!cols']=[{wch:15},{wch:15},{wch:20},{wch:15},{wch:20}];XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);logAction('EXPORT','Excel viety');}
+
         function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
         function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value,filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila))).sort((a,b)=>dateToNum(b.vahinkopäivä)-dateToNum(a.vahinkopäivä));t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
 
@@ -302,8 +305,6 @@
         function pasteText(){const t=prompt('Liitä teksti:');if(t){vahingot.find(x=>x.id===currentVahinkoId).liitteet.push({name:'[Teksti] '+new Date().toLocaleString('fi-FI'),data:t});logAction('ADD_TEXT','Teksti liitetty');openModal(currentVahinkoId);}}
 
         function lisääUusiVahinko(){const k=prompt('Kohde:');if(!k)return;const t=prompt('Tyyppi (Ajoneuvovahinko/Liikennevahinko/Omaisuusvahinko):');if(!t)return;const u={id:'UUS-'+Date.now(),vahinkopäivä:new Date().toLocaleDateString('fi-FI'),kohde:k,tyyppi:t,käsittelyn_tila:'',vahinkotunnus:'',muistiinpanot:[],liitteet:[]};vahingot.push(u);logAction('CREATE','Uusi vahinko luotu: '+k);renderTable();updateStats();openModal(u.id);}
-
-        function exportData(){const c=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])].map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');const b=new Blob([c],{type:'text/csv'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_${new Date().toISOString().slice(0,10)}.csv`;l.click();logAction('EXPORT','Excel viety');}
 
         function lataVarmuuskopio(){const j=JSON.stringify(vahingot,null,2),b=new Blob([j],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`vahingot_varmuuskopio_${new Date().toISOString().slice(0,10)}.json`;l.click();logAction('BACKUP','Varmuuskopio ladattu');}
 
