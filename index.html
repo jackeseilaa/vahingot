@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.3</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.4</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -109,7 +109,7 @@
 
         <header>
             <div>
-                <h1>📋 Vahinkorekisteri v6.3</h1>
+                <h1>📋 Vahinkorekisteri v6.4</h1>
                 <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
             </div>
             <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -184,9 +184,8 @@
         </div>
     </div>
 
-    <div class="version">v6.3</div>
+    <div class="version">v6.4</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
     <script>
         // IndexedDB setup
         let db = null;
@@ -296,7 +295,25 @@
 
         function syncToICloud(){const json=JSON.stringify(vahingot,null,2);const blob=new Blob([json],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`vahinkorekisteri_${new Date().toISOString().slice(0,10)}.json`;link.click();alert('Tiedosto ladattu! Pudota se iCloud Drive sovellukseen tai Finder:iin.');logAction('ICLOUD_SYNC','Tiedot viedty iCloud:iin');}
 
-        function exportExcel(){const ws_data=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä,v.kohde,v.tyyppi,v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])];const ws=XLSX.utils.aoa_to_sheet(ws_data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vahingot');ws['!cols']=[{wch:15},{wch:15},{wch:20},{wch:15},{wch:20}];XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);logAction('EXPORT','Excel viety');}
+        function exportExcel(){
+            try {
+                const rows=[['Vahinkopäivä','Kohde','Tyyppi','Käsittelyn tila','Vahinkotunnus'],...vahingot.map(v=>[v.vahinkopäivä||'',v.kohde||'',v.tyyppi||'',v.käsittelyn_tila||'Avoin',v.vahinkotunnus||''])];
+                const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+                const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+                const link=document.createElement('a');
+                link.setAttribute('href',URL.createObjectURL(blob));
+                link.setAttribute('download',`vahingot_${new Date().toISOString().slice(0,10)}.csv`);
+                link.style.visibility='hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                logAction('EXPORT','Excel viety');
+                alert('Tiedosto ladattu onnistuneesti!');
+            } catch(err) {
+                console.error('Export error:',err);
+                alert('Virhe viennissä: '+err.message);
+            }
+        }
 
         function dateToNum(d){if(!d)return 0;const[a,b,c]=d.split('.');return parseInt(c+b+a);}
         function renderTable(){const t=document.getElementById('tableBody'),s=document.getElementById('searchInput').value.toLowerCase(),f=document.getElementById('typeFilter').value,st=document.getElementById('statusFilter').value,filtered=vahingot.filter(v=>v.kohde.toLowerCase().includes(s)&&(!f||v.tyyppi===f)&&(!st||v.käsittelyn_tila===st||(!st&&!v.käsittelyn_tila))).sort((a,b)=>dateToNum(b.vahinkopäivä)-dateToNum(a.vahinkopäivä));t.innerHTML=filtered.length?filtered.map(v=>`<tr onclick="openModal('${v.id}')"><td>${v.vahinkopäivä}</td><td><strong>${v.kohde}</strong></td><td>${v.tyyppi}</td><td><span class="badge ${v.käsittelyn_tila==='Käsitelty'?'käsitelty':v.käsittelyn_tila==='Käsittelyssä'?'käsittelyssä':v.käsittelyn_tila==='Arkistoitu'?'arkistoitu':'avoin'}">${v.käsittelyn_tila||'Avoin'}</span></td><td>${v.vahinkotunnus||'—'}</td></tr>`).join(''):'<tr><td colspan="5">Ei tuloksia</td></tr>';}
