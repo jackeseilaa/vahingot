@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0a4272">
-    <title>Vahinkorekisteri — Vakuutusmeklari v6.9</title>
+    <title>Vahinkorekisteri — Vakuutusmeklari v6.10</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --navy: #0a4272; --gold: #d4af37; --light-navy: #1a5a9e; --gray-50: #f9fafb; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-600: #4b5563; --text-primary: #1f2937; --text-secondary: #6b7280; }
@@ -120,7 +120,7 @@
         <header>
             <div class="header-top">
                 <div>
-                    <h1>📋 Vahinkorekisteri v6.9</h1>
+                    <h1>📋 Vahinkorekisteri v6.10</h1>
                     <p style="font-size: 0.9rem; opacity: 0.9;">GDPR-suojattu | Istunto: <span id="sessionTime">15:00</span></p>
                 </div>
                 <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
@@ -185,7 +185,7 @@
             <div class="modal-field"><label>Käsittelyn tila</label><select id="modalTila" onchange="saveField('käsittelyn_tila', this.value)"><option value="">Avoin</option><option>Käsittelyssä</option><option>Käsitelty</option><option>Arkistoitu</option></select></div>
             <div class="modal-field"><label>Vahinkotunnus</label><input type="text" id="modalTunnus" onchange="saveField('vahinkotunnus', this.value)"></div>
             <div class="modal-field"><label>Muistiinpanot</label><div id="muistiinpanot"></div><textarea id="uusiMuistiinpano" placeholder="Lisää uusi muistiinpano..."></textarea><button onclick="lisääMuistiinpano()" style="margin-top: 0.5rem; width: 100%;">Lisää muistiinpano</button></div>
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);"><label style="font-weight: bold; color: var(--navy); display: block; margin-bottom: 1rem;">Liitteet</label><div id="liitteet"></div><button onclick="document.getElementById('multiFileInput').click()" class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;">📁 Lisää liitteet</button><button onclick="pasteText()" class="btn-secondary" style="width: 100%;">📋 Liitä teksti</button><input type="file" id="multiFileInput" class="file-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"></div>
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);"><label style="font-weight: bold; color: var(--navy); display: block; margin-bottom: 1rem;">Liitteet</label><div id="liitteet"></div><button onclick="document.getElementById('multiFileInput').click()" class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;">📁 Lisää liitteet</button><button onclick="pasteText()" class="btn-secondary" style="width: 100%;">📋 Liitä teksti</button><input type="file" id="multiFileInput" class="file-input" multiple></div>
             <div style="margin-top: 2rem;"><button onclick="closeModal()" class="btn-secondary">Sulje</button></div>
         </div>
     </div>
@@ -205,7 +205,7 @@
         </div>
     </div>
 
-    <div class="version">v6.9</div>
+    <div class="version">v6.10</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
