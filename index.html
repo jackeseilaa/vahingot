@@ -407,6 +407,8 @@ function defaultData(){return[
 function loadData(){
   try{ const s=localStorage.getItem(KEY); records=s?JSON.parse(s):defaultData(); }
   catch(e){ records=defaultData(); }
+  // Normalisoi kaikki päivämäärät ISO-muotoon
+  records=records.map(r=>({...r,date:toISO(r.date||'')}));
 }
 function saveData(){
   try{ localStorage.setItem(KEY,JSON.stringify(records)); }
