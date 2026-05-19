@@ -493,9 +493,16 @@ function renderTable(){
 
   rows.sort((a,b)=>{
     let av,bv;
-    if(sortField==='date'){av=a.date||'';bv=b.date||'';}
-    else if(sortField==='fileCount'){av=a.files.length;bv=b.files.length;}
-    else{av=(a[sortField]||'').toLowerCase();bv=(b[sortField]||'').toLowerCase();}
+    if(sortField==='date'){
+      // Oikea päivämäärävertailu - tyhjät päivät loppuun
+      const da=new Date(a.date||'9999-12-31').getTime();
+      const db=new Date(b.date||'9999-12-31').getTime();
+      av=da;bv=db;
+    } else if(sortField==='fileCount'){
+      av=a.files.length;bv=b.files.length;
+    } else {
+      av=(a[sortField]||'').toLowerCase();bv=(b[sortField]||'').toLowerCase();
+    }
     return av<bv?(sortAsc?-1:1):av>bv?(sortAsc?1:-1):0;
   });
 
