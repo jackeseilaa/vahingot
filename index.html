@@ -19,7 +19,7 @@
   --shadow:0 2px 12px rgba(10,66,114,.1);
   --r:10px;
 }
-html{height:100%;height:-webkit-fill-available}body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;width:100%}
+html{height:100%;height:-webkit-fill-available}body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;width:100%;max-width:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
 
 /* ── LOGIN ── */
@@ -52,7 +52,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hbtn:active{background:rgba(255,255,255,.25)}
 .hbtns{display:flex;gap:8px}
 
-.body{flex:1;display:flex;overflow:hidden}
+.body{flex:1;display:flex;overflow:hidden;overflow-x:hidden}
 
 /* ── SIDEBAR ── */
 .sidebar{width:256px;background:var(--white);border-right:1px solid var(--gray2);
@@ -97,7 +97,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 .tarea{flex:1;overflow-y:auto;padding:10px}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);
-  border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  border-radius:12px;overflow:hidden;box-shadow:var(--shadow);table-layout:fixed}
 thead{position:sticky;top:0;z-index:1}
 th{background:var(--navy);color:var(--white);padding:9px 12px;
   text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;
@@ -109,7 +109,7 @@ tbody tr{cursor:pointer;border-bottom:1px solid var(--gray2);transition:backgrou
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:#eef3f8}
 tbody tr:active{background:var(--gray2)}
-td{padding:8px 12px;font-size:14px;vertical-align:middle}
+td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0}
 .empty-row td{text-align:center;padding:40px;color:var(--gray5)}
 
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
@@ -212,6 +212,7 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle}
     <div>
       <h1>📋 Vahinkorekisteri</h1>
       <small id="hstats">—</small>
+        <small style="opacity:.5;font-size:10px">v8.2</small>
     </div>
     <div class="hbtns">
       <button class="hbtn" onclick="openNew()">＋ Uusi vahinko</button>
@@ -276,6 +277,14 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle}
 
       <div class="tarea">
         <table>
+          <colgroup>
+            <col style="width:120px">
+            <col style="width:110px">
+            <col style="width:150px">
+            <col style="width:110px">
+            <col style="width:180px">
+            <col style="width:70px">
+          </colgroup>
           <thead>
             <tr>
               <th onclick="setSort('date')" id="th-date">Vahinkopäivä</th>
