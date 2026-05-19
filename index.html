@@ -212,7 +212,7 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
     <div>
       <h1>📋 Vahinkorekisteri</h1>
       <small id="hstats">—</small>
-        <small style="opacity:.5;font-size:10px">v8.2</small>
+        <small style="opacity:.5;font-size:10px">v8.8</small>
     </div>
     <div class="hbtns">
       <button class="hbtn" onclick="openNew()">＋ Uusi vahinko</button>
@@ -370,7 +370,7 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const PIN='1234', KEY='vahinkorekisteri_v8';
+const VERSION='8.8', PIN='1234', KEY='vahinkorekisteri_v8';
 let records=[], currentId=null, currentNotes=[], currentFiles=[];
 let sortField='date', sortAsc=false;
 
@@ -766,6 +766,10 @@ function importFromFile(){
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded',()=>{
+  // Aseta versio
+  const versionEl=document.querySelector('small[style*="opacity"]');
+  if(versionEl&&versionEl.textContent.includes('v'))versionEl.textContent='v'+VERSION;
+
   initPin();
 
   // Table row click (event delegation)
