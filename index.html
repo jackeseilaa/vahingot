@@ -673,21 +673,55 @@ function importFromFile(){
   if(!file){return;}
   const r=new FileReader();
   r.onload=e=>{
-    // Tyhjennä vasta kun lukeminen valmis
     input.value='';
+    let data;
+    // Vaihe 1: JSON-parsinta
     try{
-      const data=JSON.parse(e.target.result);
-      if(!Array.isArray(data))throw new Error('Ei taulukko');
-      if(confirm(`Tuodaan ${data.length} vahinkoa iCloud:sta.\n\nKorvataanko laittteen nykyiset tiedot?`)){
-        records=data;
-        saveData();
-        renderTable();
-        alert('✅ Tuonti onnistui! ' + data.length + ' vahinkoa ladattu.');
-      }
+      data=JSON.parse(e.target.result);
     }catch(err){
-      input.value='';
-      alert('❌ Tiedoston luku epäonnistui.\nVarmista että tiedosto on vahinkot_xxxx.json');
+      alert('❌ JSON-parsinta epäonnistui.\nTiedosto on viallinen tai väärä tiedosto.');
+      return;
     }
+    // Vaihe 2: Rakenne
+    if(!Array.isArray(data)){
+      alert('❌ Tiedoston rakenne on väärä (ei taulukko).');
+      return;
+    }
+    // Vaihe 3: Varmistus
+    if(!confirm('Tuodaan ' + data.length + ' vahinkoa.\n\nKorvataanko nykyiset tiedot?')) return;
+    // Vaihe 4: Normalisoi rakenne (tue vanhoja versioita)
+    data=data.map(r=>({
+      id:r.id||('IMP-'+Date.now()+Math.random()),
+      date:r.date||r.vahinkopäivä||'',
+      target:r.target||r.kohde||'',
+      type:r.type||r.tyyppi||'Ajoneuvovahinko',
+      status:r.status||r.käsittelyn_tila||'',
+      ref:r.ref||r.vahinkotunnus||'',
+      notes:r.notes||r.muistiinpanot||[],
+      files:r.files||r.liitteet||[]
+    }));
+    // Vaihe 5: Tallenna
+    try{
+      localStorage.setItem(KEY,JSON.stringify(data));
+      records=data;
+    }catch(err){
+      // localStorage täynnä - yritä ilman kuvia
+      if(confirm('⚠️ Selainmuisti täynnä (kuvien takia).\n\nTuodaanko tiedot ILMAN kuvia?')){
+        const dataNoFiles=data.map(r=>({...r,files:[]}));
+        try{
+          localStorage.setItem(KEY,JSON.stringify(dataNoFiles));
+          records=dataNoFiles;
+          alert('✅ Tuonti onnistui (ilman kuvia) — ' + dataNoFiles.length + ' vahinkoa.');
+          renderTable(); return;
+        }catch(e2){
+          alert('❌ Tallennus epäonnistui kokonaan. Selainmuisti on täynnä.');
+          return;
+        }
+      } else return;
+    }
+    // Vaihe 6: Päivitä näkymä
+    renderTable();
+    alert('✅ Tuonti onnistui! ' + data.length + ' vahinkoa ladattu.');
   };
   r.onerror=()=>{
     input.value='';
