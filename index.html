@@ -19,7 +19,7 @@
   --shadow:0 2px 12px rgba(10,66,114,.1);
   --r:10px;
 }
-html,body{height:100%;overflow:hidden}
+html{height:100%;height:-webkit-fill-available}body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;width:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
 
 /* ── LOGIN ── */
@@ -40,12 +40,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lbtn:active{opacity:.85}
 
 /* ── LAYOUT ── */
-#app{display:flex;flex-direction:column;height:100%}
+#app{display:flex;flex-direction:column;height:100%;height:-webkit-fill-available}
 .app-header{
   background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--white);
-  padding:13px 20px;display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;display:flex;justify-content:space-between;align-items:center;
   flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.app-header h1{font-size:18px;font-weight:700;letter-spacing:-.2px}
+.app-header h1{font-size:16px;font-weight:700;letter-spacing:-.2px}
 .app-header small{font-size:12px;opacity:.75;display:block;margin-top:1px}
 .hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);
   color:var(--white);padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
@@ -86,7 +86,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* ── MAIN AREA ── */
 .main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.mbar{display:none;padding:10px 12px;background:var(--white);
+.mbar{display:none;padding:8px 10px;background:var(--white);
   border-bottom:1px solid var(--gray2);gap:8px;flex-wrap:wrap}
 @media(max-width:768px){.mbar{display:flex}}
 .mbar input,.mbar select{
@@ -95,11 +95,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mbtn{padding:8px 14px;border:none;border-radius:8px;
   background:var(--navy);color:var(--white);font-size:13px;font-weight:700;cursor:pointer}
 
-.tarea{flex:1;overflow-y:auto;padding:16px}
+.tarea{flex:1;overflow-y:auto;padding:10px}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);
   border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
 thead{position:sticky;top:0;z-index:1}
-th{background:var(--navy);color:var(--white);padding:11px 14px;
+th{background:var(--navy);color:var(--white);padding:9px 12px;
   text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;
   letter-spacing:.3px;cursor:pointer;user-select:none;white-space:nowrap}
 th:hover{background:var(--navy2)}
@@ -109,7 +109,7 @@ tbody tr{cursor:pointer;border-bottom:1px solid var(--gray2);transition:backgrou
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:#eef3f8}
 tbody tr:active{background:var(--gray2)}
-td{padding:11px 14px;font-size:14px;vertical-align:middle}
+td{padding:8px 12px;font-size:14px;vertical-align:middle}
 .empty-row td{text-align:center;padding:40px;color:var(--gray5)}
 
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
