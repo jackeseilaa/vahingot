@@ -463,9 +463,9 @@ function setSort(f){
 
 /* ── RENDER TABLE ── */
 function renderTable(){
-  const q=(document.getElementById('sSearch').value||document.getElementById('mSearch').value||'').toLowerCase();
-  const tf=document.getElementById('sType').value||'';
-  const sf=document.getElementById('sStatus').value||document.getElementById('mStatus').value||'';
+  const q=document.getElementById('sSearch').value.toLowerCase();
+  const tf=document.getElementById('sType').value;
+  const sf=document.getElementById('sStatus').value;
 
   let rows=records.filter(r=>{
     const ms=r.target.toLowerCase().includes(q)||(r.ref||'').toLowerCase().includes(q);
