@@ -668,20 +668,32 @@ function exportExcel(){
   XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 function importFromFile(){
-  const file=document.getElementById('importFile').files[0]; if(!file)return;
+  const input=document.getElementById('importFile');
+  const file=input.files[0];
+  if(!file){return;}
   const r=new FileReader();
   r.onload=e=>{
+    // Tyhjennä vasta kun lukeminen valmis
+    input.value='';
     try{
       const data=JSON.parse(e.target.result);
-      if(!Array.isArray(data))throw new Error();
-      if(confirm(`Tuodaan ${data.length} vahinkoa.\n\nKorvataanko nykyiset tiedot?`)){
-        records=data; saveData(); renderTable();
-        alert('✅ Tuonti onnistui!');
+      if(!Array.isArray(data))throw new Error('Ei taulukko');
+      if(confirm(`Tuodaan ${data.length} vahinkoa iCloud:sta.\n\nKorvataanko laittteen nykyiset tiedot?`)){
+        records=data;
+        saveData();
+        renderTable();
+        alert('✅ Tuonti onnistui! ' + data.length + ' vahinkoa ladattu.');
       }
-    }catch(err){alert('❌ Virheellinen JSON-tiedosto');}
+    }catch(err){
+      input.value='';
+      alert('❌ Tiedoston luku epäonnistui.\nVarmista että tiedosto on vahinkot_xxxx.json');
+    }
   };
-  r.readAsText(file);
-  document.getElementById('importFile').value='';
+  r.onerror=()=>{
+    input.value='';
+    alert('❌ Tiedostoa ei voitu lukea.');
+  };
+  r.readAsText(file, 'UTF-8');
 }
 
 /* ── INIT ── */
