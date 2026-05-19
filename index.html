@@ -3,555 +3,402 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a4272">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='70' font-size='80'>📊</text></svg>">
-<title>Vakuutushallinta</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='72' font-size='80'>📋</text></svg>">
+<title>Vahinkohallinta</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --navy:#0a4272;--navy2:#1a5a9e;--gold:#d4af37;
   --green:#28a745;--red:#dc3545;--orange:#fd7e14;
   --bg:#f0f4f8;--white:#fff;
-  --gray1:#f8f9fa;--gray2:#e9ecef;--gray3:#dee2e6;--gray5:#adb5bd;
+  --g1:#f8f9fa;--g2:#e9ecef;--g3:#dee2e6;--g5:#adb5bd;
   --text:#212529;--text2:#6c757d;
-  --shadow:0 2px 12px rgba(10,66,114,.1);
+  --shadow:0 2px 12px rgba(10,66,114,.1);--shadow2:0 6px 24px rgba(10,66,114,.18);
 }
 html{height:100%;height:-webkit-fill-available}
-body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;
-  width:100%;max-width:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  background:var(--bg);color:var(--text);font-size:15px}
-
-/* ── VIEW SYSTEM ── */
-.view{display:none;flex-direction:column;height:100%;height:-webkit-fill-available}
-.view.active{display:flex}
-
-/* ── LOGIN ── */
-#vLogin{position:fixed;inset:0;align-items:center;justify-content:center;
+body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;width:100%;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(160deg,var(--navy),var(--navy2));z-index:999}
+#login.gone{display:none}
 .lbox{background:var(--white);border-radius:20px;padding:28px;width:90%;max-width:380px;
   box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
-.lbox h1{color:var(--navy);font-size:20px;margin:8px 0 4px}
-.lbox p{color:var(--text2);font-size:13px;margin-bottom:22px}
+.lbox h1{color:var(--navy);font-size:20px;margin:6px 0 4px;font-weight:800}
+.lbox p{color:var(--text2);font-size:13px;margin-bottom:20px}
 .pin-row{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
-.pbox{width:52px;height:52px;border:2px solid var(--gray3);border-radius:12px;
-  font-size:26px;font-weight:700;text-align:center;color:var(--navy);background:var(--white)}
-.pbox:focus{outline:none;border-color:var(--navy);background:var(--gray1)}
-#perr{color:var(--red);font-size:14px;min-height:18px;margin-bottom:8px}
-.lbtn{width:100%;padding:13px;background:var(--navy);color:var(--white);
-  border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
-
-/* ── COMMON HEADER ── */
-.app-header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--white);
+.pbox{width:52px;height:52px;border:2px solid var(--g3);border-radius:12px;
+  font-size:24px;font-weight:700;text-align:center;color:var(--navy);background:var(--white)}
+.pbox:focus{outline:none;border-color:var(--navy);background:var(--g1)}
+#perr{color:var(--red);font-size:13px;min-height:18px;margin-bottom:6px}
+.lbtn{width:100%;padding:13px;background:var(--navy);color:var(--white);border:none;
+  border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.lbtn:active{opacity:.85}
+.view{position:fixed;inset:0;display:flex;flex-direction:column}
+.view.hidden{display:none}
+.hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--white);
   padding:10px 16px;display:flex;justify-content:space-between;align-items:center;
-  flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2);gap:8px}
-.app-header h1{font-size:16px;font-weight:700;flex:1;min-width:0;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-.app-header small{font-size:11px;opacity:.7;display:block;margin-top:1px}
-.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
-  color:var(--white);padding:6px 12px;border-radius:8px;font-size:13px;
-  font-weight:600;cursor:pointer;white-space:nowrap}
-.hbtn:active{background:rgba(255,255,255,.3)}
-.hbtn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
-
-/* ══════════════════════════
-   HALLINTAPANEELI
-══════════════════════════ */
-#vHallinta{background:var(--bg)}
-.hallinta-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
-
-/* Global stats bar */
-.gstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.gstat{background:var(--white);border-radius:10px;padding:12px 8px;text-align:center;
+  flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2);gap:12px}
+.hdr-left{overflow:hidden;flex:1;min-width:0}
+.hdr h1{font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr small{font-size:11px;opacity:.7;display:block;margin-top:1px}
+.hbtns{display:flex;gap:7px;flex-shrink:0}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:var(--white);
+  padding:6px 11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  white-space:nowrap;font-family:inherit}
+.hbtn.back{background:rgba(255,255,255,.28)}
+.hbtn:active{opacity:.8}
+/* DASHBOARD */
+.db{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.ds{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:600px){.ds{grid-template-columns:repeat(2,1fr)}}
+.dc{background:var(--white);border-radius:10px;padding:12px 8px;text-align:center;
   box-shadow:var(--shadow);border-top:3px solid var(--navy)}
-.gstat.red{border-top-color:var(--red)}
-.gstat.orange{border-top-color:var(--orange)}
-.gstat.green{border-top-color:var(--green)}
-.gstat .n{font-size:26px;font-weight:700;color:var(--navy)}
-.gstat.red .n{color:var(--red)}
-.gstat.orange .n{color:var(--orange)}
-.gstat.green .n{color:var(--green)}
-.gstat .l{font-size:11px;color:var(--text2);margin-top:2px}
-
-/* Search */
-.hallinta-search{display:flex;gap:8px}
-.hallinta-search input{flex:1;padding:9px 12px;border:1px solid var(--gray3);
-  border-radius:8px;font-size:14px;background:var(--white);font-family:inherit}
-.hallinta-search input:focus{outline:none;border-color:var(--navy)}
-.add-client-btn{padding:9px 16px;background:var(--navy);color:var(--white);
-  border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;
-  white-space:nowrap}
-
-/* Client cards grid */
-.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
-@media(max-width:640px){.clients-grid{grid-template-columns:1fr}}
-
-.client-card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);
-  cursor:pointer;transition:all .15s;border-left:4px solid var(--navy);overflow:hidden}
-.client-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(10,66,114,.15)}
-.client-card:active{transform:translateY(0);opacity:.9}
-.client-card.has-open{border-left-color:var(--red)}
-.client-card.has-proc{border-left-color:var(--orange)}
-.client-card.all-done{border-left-color:var(--green)}
-.client-card.empty{border-left-color:var(--gray3)}
-
-.cc-header{padding:14px 14px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.cc-name{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3}
-.cc-ytunnus{font-size:12px;color:var(--text2);margin-top:2px}
-.cc-edit-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:2px;
-  flex-shrink:0;opacity:.5;transition:opacity .15s}
-.cc-edit-btn:hover{opacity:1}
-.cc-contact{padding:0 14px 10px;font-size:13px;color:var(--text2)}
-.cc-contact span{display:inline-block;margin-right:10px}
-.cc-footer{background:var(--gray1);padding:10px 14px;display:flex;gap:8px;align-items:center}
-.cc-badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
-.cc-total{background:var(--gray2);color:var(--text)}
-.cc-open{background:#fde8ea;color:#a71d2a}
-.cc-proc{background:#fff3cd;color:#856404}
-.cc-done{background:#d4edda;color:#155724}
-.cc-arrow{margin-left:auto;color:var(--navy);font-size:16px;opacity:.5}
-
-.empty-clients{text-align:center;padding:60px 20px;color:var(--gray5)}
-.empty-clients .icon{font-size:60px;margin-bottom:16px}
-.empty-clients h2{font-size:18px;color:var(--text2);margin-bottom:8px}
-.empty-clients p{font-size:14px}
-
-/* ══════════════════════════
-   VAHINKOREKISTERI (asiakas)
-══════════════════════════ */
-#vVahinko{background:var(--bg)}
-.vr-body{flex:1;display:flex;overflow:hidden}
-
-/* Sidebar */
-.sidebar{width:256px;background:var(--white);border-right:1px solid var(--gray2);
-  flex-shrink:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px}
-@media(max-width:768px){.sidebar{display:none}}
-.sb-title{font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-  color:var(--text2);font-weight:700;margin-bottom:10px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.scard{background:var(--gray1);border-radius:8px;padding:10px 8px;text-align:center;
-  border-left:3px solid var(--navy)}
-.scard .n{font-size:24px;font-weight:700;color:var(--navy)}
-.scard .l{font-size:11px;color:var(--text2)}
-.scard.green{border-left-color:var(--green)}
-.scard.orange{border-left-color:var(--orange)}
-.scard.red{border-left-color:var(--red)}
-.finput,.fselect{width:100%;padding:9px 10px;border:1px solid var(--gray3);
-  border-radius:8px;font-size:14px;background:var(--white);margin-bottom:8px;font-family:inherit}
-.finput:focus,.fselect:focus{outline:none;border-color:var(--navy)}
-.sbtn{width:100%;padding:10px;border:none;border-radius:8px;font-size:13px;
-  font-weight:600;cursor:pointer;margin-bottom:6px;display:flex;align-items:center;
-  gap:8px;font-family:inherit}
+.dc.r{border-top-color:var(--red)}.dc.o{border-top-color:var(--orange)}.dc.g{border-top-color:var(--green)}
+.dc .n{font-size:24px;font-weight:800;color:var(--navy)}
+.dc.r .n{color:var(--red)}.dc.o .n{color:var(--orange)}.dc.g .n{color:var(--green)}
+.dc .l{font-size:11px;color:var(--text2);margin-top:1px}
+.ctb{display:flex;gap:10px}
+.ctb input{flex:1;padding:9px 12px;border:1px solid var(--g3);border-radius:8px;
+  font-size:14px;font-family:inherit;background:var(--white)}
+.ctb input:focus{outline:none;border-color:var(--navy)}
+.anb{padding:9px 16px;background:var(--navy);color:var(--white);border:none;border-radius:8px;
+  font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+.anb:active{opacity:.85}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.ccard{background:var(--white);border-radius:12px;box-shadow:var(--shadow);
+  border:1px solid var(--g2);overflow:hidden;transition:transform .15s,box-shadow .15s}
+.ccard:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+.cc-h{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:13px 16px;color:var(--white)}
+.cc-h h3{font-size:15px;font-weight:800;margin-bottom:2px}
+.cc-h small{font-size:12px;opacity:.75}
+.cc-b{padding:13px 16px}
+.ccs-g{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}
+.ccs{text-align:center;background:var(--g1);border-radius:6px;padding:7px 4px}
+.ccs .n{font-size:18px;font-weight:800;color:var(--navy)}
+.ccs.r .n{color:var(--red)}.ccs.o .n{color:var(--orange)}
+.ccs .l{font-size:10px;color:var(--text2)}
+.cc-f{display:flex;gap:7px}
+.ccb{flex:1;padding:8px;border:none;border-radius:7px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit}
+.ccb.p{background:var(--navy);color:var(--white)}
+.ccb.s{background:var(--g2);color:var(--text)}
+.ccb:active{opacity:.85}
+.edash{text-align:center;padding:50px 20px;color:var(--g5)}
+.edash div{font-size:48px;margin-bottom:10px}
+/* REGISTRY */
+.rb{flex:1;display:flex;overflow:hidden}
+.sb{width:244px;background:var(--white);border-right:1px solid var(--g2);
+  flex-shrink:0;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:768px){.sb{display:none}}
+.sbt{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:8px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sca{background:var(--g1);border-radius:8px;padding:8px 6px;text-align:center;border-left:3px solid var(--navy)}
+.sca .n{font-size:20px;font-weight:700;color:var(--navy)}
+.sca .l{font-size:11px;color:var(--text2)}
+.sca.r{border-left-color:var(--red)}.sca.o{border-left-color:var(--orange)}.sca.g{border-left-color:var(--green)}
+.fi,.fs{width:100%;padding:8px 10px;border:1px solid var(--g3);border-radius:8px;
+  font-size:14px;background:var(--white);margin-bottom:6px;font-family:inherit}
+.fi:focus,.fs:focus{outline:none;border-color:var(--navy)}
+.sbtn{width:100%;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;margin-bottom:5px;font-family:inherit;display:flex;align-items:center;gap:7px}
 .sbtn:active{opacity:.85}
-.sbtn.navy{background:var(--navy);color:var(--white)}
-.sbtn.green{background:var(--green);color:var(--white)}
-.sbtn.gray{background:var(--gray2);color:var(--text)}
-.sbtn.red{background:var(--red);color:var(--white)}
-
-/* Table */
-.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.mbar{display:none;padding:8px 10px;background:var(--white);
-  border-bottom:1px solid var(--gray2);gap:8px;flex-wrap:wrap}
-@media(max-width:768px){.mbar{display:flex}}
-.mbar input,.mbar select{flex:1;min-width:100px;padding:8px 10px;
-  border:1px solid var(--gray3);border-radius:8px;font-size:14px;font-family:inherit}
-.mbtn{padding:8px 12px;border:none;border-radius:8px;background:var(--navy);
-  color:var(--white);font-size:13px;font-weight:700;cursor:pointer}
-.tarea{flex:1;overflow-y:auto;padding:10px}
+.sbtn.nv{background:var(--navy);color:var(--white)}.sbtn.gn{background:var(--green);color:var(--white)}
+.sbtn.gy{background:var(--g2);color:var(--text)}.sbtn.rd{background:var(--red);color:var(--white)}
+.ma{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.mb{display:none;padding:8px 10px;background:var(--white);border-bottom:1px solid var(--g2);gap:7px;flex-wrap:wrap}
+@media(max-width:768px){.mb{display:flex}}
+.mb input,.mb select{flex:1;min-width:100px;padding:7px 9px;border:1px solid var(--g3);
+  border-radius:8px;font-size:14px;font-family:inherit}
+.mbb{padding:7px 12px;border:none;border-radius:8px;background:var(--navy);
+  color:var(--white);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.ta{flex:1;overflow-y:auto;padding:10px}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);
   border-radius:12px;overflow:hidden;box-shadow:var(--shadow);table-layout:fixed}
 thead{position:sticky;top:0;z-index:1}
-th{background:var(--navy);color:var(--white);padding:9px 12px;text-align:left;
+th{background:var(--navy);color:var(--white);padding:9px 11px;text-align:left;
   font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;
   cursor:pointer;user-select:none;white-space:nowrap}
 th:hover{background:var(--navy2)}
 th.asc::after{content:' ▲';color:var(--gold);font-size:10px}
 th.desc::after{content:' ▼';color:var(--gold);font-size:10px}
-tbody tr{cursor:pointer;border-bottom:1px solid var(--gray2);transition:background .12s}
+tbody tr{cursor:pointer;border-bottom:1px solid var(--g2);transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:#eef3f8}
-tbody tr:active{background:var(--gray2)}
-td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap;max-width:0}
-.empty-row td{text-align:center;padding:40px;color:var(--gray5)}
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+tbody tr:active{background:var(--g2)}
+td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0}
+.er td{text-align:center;padding:36px;color:var(--g5);white-space:normal}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700}
 .b-avoin{background:#fde8ea;color:#a71d2a}
 .b-käsittelyssä{background:#fff3cd;color:#856404}
 .b-käsitelty{background:#d4edda;color:#155724}
-.b-arkistoitu{background:var(--gray2);color:#383d41}
-.imgcount{font-size:13px;color:var(--text2)}
-.imgcount.has{color:var(--navy);font-weight:700}
-.mfooter{display:none;background:var(--white);border-top:1px solid var(--gray2);
-  padding:8px 12px;gap:8px}
-@media(max-width:768px){.mfooter{display:flex}}
-.mfooter button{flex:1;padding:9px 4px;border:none;border-radius:8px;
+.b-arkistoitu{background:var(--g2);color:#383d41}
+.ic{font-size:13px;color:var(--text2)}.ic.has{color:var(--navy);font-weight:700}
+.mf{display:none;background:var(--white);border-top:1px solid var(--g2);padding:7px 10px;gap:7px}
+@media(max-width:768px){.mf{display:flex}}
+.mf button{flex:1;padding:8px 3px;border:none;border-radius:8px;
   font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-@media(max-width:768px){
-  td:nth-child(3){display:none}th:nth-child(3){display:none}
-}
-
-/* ── MODALS ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+@media(max-width:768px){td:nth-child(3),th:nth-child(3){display:none}}
+/* MODALS */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
   z-index:500;align-items:center;justify-content:center;padding:16px}
-.overlay.on{display:flex}
-.mbox{background:var(--white);border-radius:16px;width:100%;max-width:560px;
-  max-height:92vh;overflow-y:auto;padding:26px}
-@media(max-width:768px){
-  .mbox{border-radius:20px 20px 0 0;align-self:flex-end;padding:20px}
-  .overlay{align-items:flex-end;padding:0}
-}
-.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.mhead h2{color:var(--navy);font-size:19px;font-weight:700}
-.mclose{background:var(--gray2);border:none;width:32px;height:32px;border-radius:50%;
-  cursor:pointer;font-size:16px;color:var(--text)}
-.fg{margin-bottom:16px}
+.ov.on{display:flex}
+.mbox{background:var(--white);border-radius:16px;width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;padding:24px}
+@media(max-width:768px){.ov{align-items:flex-end;padding:0}.mbox{border-radius:20px 20px 0 0;max-height:92vh;padding:20px}}
+.mhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.mhd h2{color:var(--navy);font-size:18px;font-weight:700}
+.mcl{background:var(--g2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;color:var(--text)}
+.fg{margin-bottom:15px}
 .fg label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;
   letter-spacing:.3px;color:var(--text2);margin-bottom:5px}
-.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1px solid var(--gray3);
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1px solid var(--g3);
   border-radius:8px;font-size:15px;font-family:inherit;background:var(--white)}
 .fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--navy)}
 .fg textarea{min-height:68px;resize:vertical}
-.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.nitem{display:flex;align-items:flex-start;gap:8px;background:#fff8e1;
-  border-left:3px solid var(--gold);padding:8px 10px;border-radius:6px;
-  margin-bottom:6px;font-size:14px}
-.nitem span{flex:1}
-.ndel{background:none;border:none;cursor:pointer;color:var(--red);font-size:18px;padding:0}
-.nadd-row{display:flex;gap:8px}
-.nadd-row input{flex:1;padding:9px 10px;border:1px solid var(--gray3);
-  border-radius:8px;font-size:14px;font-family:inherit}
-.nadd-row input:focus{outline:none;border-color:var(--navy)}
-.nadd-btn{padding:9px 14px;background:var(--navy);color:var(--white);
-  border:none;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap}
-.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:10px}
-.ithumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--gray1)}
-.ithumb img{width:100%;height:100%;object-fit:cover}
-.idel{position:absolute;top:3px;right:3px;background:rgba(220,53,69,.9);border:none;
-  color:var(--white);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:11px;
-  display:flex;align-items:center;justify-content:center}
-.ifile{background:var(--gray1);border:2px dashed var(--gray3);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;flex-direction:column;
-  aspect-ratio:1;color:var(--text2);font-size:11px;text-align:center;padding:6px}
-.addimgbtn{width:100%;padding:11px;background:var(--gray1);border:2px dashed var(--gray3);
-  border-radius:8px;cursor:pointer;color:var(--navy);font-weight:700;font-size:14px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  font-family:inherit;transition:all .2s}
-.addimgbtn:hover{background:var(--gray2);border-color:var(--navy)}
-.addimgbtn.dragover{background:var(--navy);color:var(--white);border-color:var(--gold)}
-.mfooter2{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gray2)}
-.bsave{flex:2;padding:12px;background:var(--green);color:var(--white);border:none;
-  border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
-.bcancel{flex:1;padding:12px;background:var(--gray2);color:var(--text);border:none;
-  border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
-.bdel{padding:12px 16px;background:var(--red);color:var(--white);border:none;
-  border-radius:10px;font-size:15px;cursor:pointer}
-</style>
-</head>
-<body>
-
-<!-- ══ LOGIN ══ -->
-<div class="view active" id="vLogin" style="display:flex">
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:500px){.r2{grid-template-columns:1fr}}
+.ni{display:flex;align-items:flex-start;gap:7px;background:#fff8e1;
+  border-left:3px solid var(--gold);padding:8px 9px;border-radius:6px;margin-bottom:5px;font-size:14px}
+.ni span{flex:1}
+.nd{background:none;border:none;cursor:pointer;color:var(--red);font-size:17px;padding:0}
+.nar{display:flex;gap:8px}
+.nar input{flex:1;padding:8px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px;font-family:inherit}
+.nar input:focus{outline:none;border-color:var(--navy)}
+.nab{padding:8px 13px;background:var(--navy);color:var(--white);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit}
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:7px;margin-bottom:8px}
+.itr{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--g1)}
+.itr img{width:100%;height:100%;object-fit:cover}
+.idl{position:absolute;top:3px;right:3px;background:rgba(220,53,69,.9);border:none;
+  color:var(--white);width:22px;height:22px;border-radius:50%;cursor:pointer;
+  font-size:11px;display:flex;align-items:center;justify-content:center}
+.ifl{display:flex;align-items:center;justify-content:center;flex-direction:column;
+  aspect-ratio:1;font-size:10px;text-align:center;padding:5px;gap:3px;
+  background:var(--g1);border:2px dashed var(--g3);border-radius:8px;color:var(--text2)}
+.aib{width:100%;padding:10px;background:var(--g1);border:2px dashed var(--g3);border-radius:8px;
+  cursor:pointer;color:var(--navy);font-weight:700;font-size:13px;
+  display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;transition:all .2s}
+.aib:hover{background:var(--g2);border-color:var(--navy)}
+.aib.dov{background:var(--navy);color:var(--white);border-color:var(--gold)}
+.mft{display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--g2)}
+.bs{flex:2;padding:12px;background:var(--green);color:var(--white);border:none;
+  border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.bc{flex:1;padding:12px;background:var(--g2);color:var(--text);border:none;
+  border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.bd{padding:12px 14px;background:var(--red);color:var(--white);border:none;
+  border-radius:10px;font-size:15px;cursor:pointer;font-family:inherit}
+.bc:active,.bs:active,.bd:active{opacity:.85}
+</style></head><body>
+<!-- LOGIN -->
+<div id="login">
   <div class="lbox">
-    <div style="font-size:36px">🛡️</div>
-    <h1>Vakuutushallinta</h1>
-    <p>Vakuutusmeklarin hallintajärjestelmä<br><small style="color:#aaa">AJarmo Oy | J Sailing Tmi</small></p>
+    <div style="font-size:32px">🛡️</div>
+    <h1>Vahinkohallinta</h1>
+    <p>Vakuutusmeklarin aineistonhallinta<br><small style="color:#bbb">AJarmo Oy · J Sailing Tmi</small></p>
     <div id="perr"></div>
     <div class="pin-row" id="pinRow"></div>
     <button class="lbtn" onclick="tryLogin()">Kirjaudu sisään</button>
   </div>
 </div>
 
-<!-- ══ HALLINTAPANEELI ══ -->
-<div class="view" id="vHallinta">
-  <header class="app-header">
-    <div>
-      <h1>📊 Vakuutushallinta</h1>
-      <small id="hpStats">—</small>
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="hbtn" onclick="exportAllJSON()">💾 Vie kaikki</button>
-      <button class="hbtn" onclick="document.getElementById('importAllFile').click()">📂 Lataa</button>
-      <input type="file" id="importAllFile" accept=".json" style="display:none">
+<!-- DASHBOARD -->
+<div id="vD" class="view hidden">
+  <header class="hdr">
+    <div class="hdr-left"><h1>📊 Vahinkohallinta</h1><small id="dStat">—</small></div>
+    <div class="hbtns">
+      <button class="hbtn" onclick="exportAll()">💾 Vie kaikki</button>
+      <button class="hbtn" onclick="G('impAll').click()">📂 Tuo kaikki</button>
+      <input type="file" id="impAll" accept=".json" style="display:none">
       <button class="hbtn" onclick="logout()">Ulos</button>
     </div>
   </header>
-  <div class="hallinta-body">
-    <div class="gstats">
-      <div class="gstat"><div class="n" id="gs-clients">0</div><div class="l">Asiakkaat</div></div>
-      <div class="gstat red"><div class="n" id="gs-open">0</div><div class="l">Avoimet</div></div>
-      <div class="gstat orange"><div class="n" id="gs-proc">0</div><div class="l">Käsittelyssä</div></div>
-      <div class="gstat green"><div class="n" id="gs-done">0</div><div class="l">Käsitelty</div></div>
+  <div class="db">
+    <div class="ds">
+      <div class="dc"><div class="n" id="dsC">0</div><div class="l">Asiakkaat</div></div>
+      <div class="dc r"><div class="n" id="dsO">0</div><div class="l">Avoimet</div></div>
+      <div class="dc o"><div class="n" id="dsP">0</div><div class="l">Käsittelyssä</div></div>
+      <div class="dc g"><div class="n" id="dsD">0</div><div class="l">Käsitelty</div></div>
     </div>
-    <div class="hallinta-search">
-      <input id="clientSearch" placeholder="🔍 Hae asiakasta..." oninput="renderClients()">
-      <button class="add-client-btn" onclick="openClientModal()">＋ Uusi asiakas</button>
+    <div class="ctb">
+      <input id="cSrch" placeholder="🔍 Hae asiakasta..." oninput="renderCl()">
+      <button class="anb" onclick="openCl()">＋ Uusi asiakas</button>
     </div>
-    <div class="clients-grid" id="clientsGrid"></div>
+    <div class="cgrid" id="cgrid"></div>
+    <p style="text-align:center;font-size:11px;color:var(--g5);padding:4px 0" id="dVer"></p>
   </div>
 </div>
 
-<!-- ══ VAHINKOREKISTERI ══ -->
-<div class="view" id="vVahinko">
-  <header class="app-header">
-    <div style="min-width:0;flex:1">
-      <h1 id="vrTitle">Vahinkorekisteri</h1>
-      <small id="vrStats">—</small>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="hbtn" onclick="goBack()">← Asiakkaat</button>
-      <button class="hbtn gold" onclick="openNewDamage()">＋ Uusi</button>
+<!-- REGISTRY -->
+<div id="vR" class="view hidden">
+  <header class="hdr">
+    <div class="hdr-left"><h1 id="rName">📋 Vahinkorekisteri</h1><small id="rStat">—</small></div>
+    <div class="hbtns">
+      <button class="hbtn back" onclick="showDash()">← Asiakkaat</button>
+      <button class="hbtn" onclick="openNew()">＋ Uusi</button>
+      <button class="hbtn" onclick="logout()">Ulos</button>
     </div>
   </header>
-  <div class="vr-body">
-    <!-- Sidebar -->
-    <div class="sidebar">
+  <div class="rb">
+    <div class="sb">
       <div>
-        <div class="sb-title">Tilastot</div>
-        <div class="stats-grid">
-          <div class="scard"><div class="n" id="st">0</div><div class="l">Yhteensä</div></div>
-          <div class="scard red"><div class="n" id="so">0</div><div class="l">Avoimet</div></div>
-          <div class="scard orange"><div class="n" id="sp">0</div><div class="l">Käsittelyssä</div></div>
-          <div class="scard green"><div class="n" id="sd">0</div><div class="l">Käsitelty</div></div>
+        <div class="sbt">Tilastot</div>
+        <div class="sg">
+          <div class="sca"><div class="n" id="st">0</div><div class="l">Yhteensä</div></div>
+          <div class="sca r"><div class="n" id="so">0</div><div class="l">Avoimet</div></div>
+          <div class="sca o"><div class="n" id="sp">0</div><div class="l">Käsittelyssä</div></div>
+          <div class="sca g"><div class="n" id="sd">0</div><div class="l">Käsitelty</div></div>
         </div>
       </div>
       <div>
-        <div class="sb-title">Haku & Suodattimet</div>
-        <input class="finput" id="sSearch" placeholder="🔍 Hae kohteella..." oninput="renderTable()">
-        <select class="fselect" id="sType" onchange="renderTable()">
+        <div class="sbt">Haku & Suodatus</div>
+        <input class="fi" id="sS" placeholder="🔍 Hae kohteella..." oninput="renderT()">
+        <select class="fs" id="sTy" onchange="renderT()">
           <option value="">Kaikki tyypit</option>
-          <option>Ajoneuvovahinko</option>
-          <option>Liikennevahinko</option>
-          <option>Omaisuusvahinko</option>
+          <option>Ajoneuvovahinko</option><option>Liikennevahinko</option><option>Omaisuusvahinko</option>
         </select>
-        <select class="fselect" id="sStatus" onchange="renderTable()">
+        <select class="fs" id="sSt" onchange="renderT()">
           <option value="">Kaikki tilat</option>
           <option value="avoin">Avoin</option>
-          <option>Käsittelyssä</option>
-          <option>Käsitelty</option>
-          <option>Arkistoitu</option>
+          <option>Käsittelyssä</option><option>Käsitelty</option><option>Arkistoitu</option>
         </select>
       </div>
       <div>
-        <div class="sb-title">Toiminnot</div>
-        <button class="sbtn navy" onclick="openNewDamage()">➕ Uusi vahinko</button>
-        <button class="sbtn green" onclick="exportClientJSON()">💾 Vie JSON</button>
-        <button class="sbtn gray" onclick="document.getElementById('importClientFile').click()">📂 Lataa JSON</button>
-        <input type="file" id="importClientFile" accept=".json" style="display:none">
-        <button class="sbtn gray" onclick="exportExcel()">📊 Vie Excel</button>
-        <button class="sbtn red" onclick="deleteAllDamages()">🗑️ Poista vahingot</button>
+        <div class="sbt">Toiminnot</div>
+        <button class="sbtn nv" onclick="openNew()">➕ Uusi vahinko</button>
+        <button class="sbtn gn" onclick="expRec()">💾 Vie JSON iCloud:iin</button>
+        <button class="sbtn gy" onclick="G('impRec').click()">📂 Tuo JSON</button>
+        <input type="file" id="impRec" accept=".json" style="display:none">
+        <button class="sbtn gy" onclick="expXL()">📊 Vie Excel</button>
+        <button class="sbtn rd" onclick="delAll()">🗑️ Poista vahingot</button>
       </div>
     </div>
-    <!-- Table -->
-    <div class="main-area">
-      <div class="mbar">
-        <input id="mSearch" placeholder="🔍 Hae..." oninput="renderTable()">
-        <select id="mStatus" onchange="renderTable()">
-          <option value="">Kaikki tilat</option>
-          <option value="avoin">Avoin</option>
-          <option>Käsittelyssä</option>
-          <option>Käsitelty</option>
+    <div class="ma">
+      <div class="mb">
+        <input id="mS" placeholder="🔍 Hae...">
+        <select id="mSt">
+          <option value="">Kaikki</option><option value="avoin">Avoin</option>
+          <option>Käsittelyssä</option><option>Käsitelty</option>
         </select>
-        <button class="mbtn" onclick="openNewDamage()">＋</button>
+        <button class="mbb" onclick="openNew()">＋</button>
       </div>
-      <div class="tarea">
+      <div class="ta">
         <table>
           <colgroup>
-            <col style="width:120px"><col style="width:110px"><col style="width:150px">
-            <col style="width:110px"><col style="width:180px"><col style="width:70px">
+            <col style="width:116px"><col style="width:110px"><col style="width:146px">
+            <col style="width:108px"><col style="width:170px"><col style="width:62px">
           </colgroup>
           <thead><tr>
-            <th onclick="setSort('date')" id="th-date">Vahinkopäivä</th>
-            <th onclick="setSort('target')" id="th-target">Kohde</th>
-            <th onclick="setSort('type')" id="th-type">Tyyppi</th>
-            <th onclick="setSort('status')" id="th-status">Tila</th>
-            <th onclick="setSort('ref')" id="th-ref">Vahinkotunnus</th>
-            <th onclick="setSort('fileCount')" id="th-fileCount">Kuvat</th>
+            <th onclick="srt('date')" id="th-date">Päivä</th>
+            <th onclick="srt('target')" id="th-target">Kohde</th>
+            <th onclick="srt('type')" id="th-type">Tyyppi</th>
+            <th onclick="srt('status')" id="th-status">Tila</th>
+            <th onclick="srt('ref')" id="th-ref">Vahinkotunnus</th>
+            <th onclick="srt('fc')" id="th-fc">Kuv.</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
-      <div class="mfooter">
-        <button style="background:var(--green);color:#fff" onclick="exportClientJSON()">💾 Vie</button>
-        <button style="background:var(--gray2)" onclick="document.getElementById('importClientFile').click()">📂 Lataa</button>
-        <button style="background:var(--gray2)" onclick="exportExcel()">📊 Excel</button>
-        <button style="background:var(--navy);color:#fff" onclick="goBack()">← Asiakkaat</button>
+      <div class="mf">
+        <button style="background:var(--green);color:#fff" onclick="expRec()">💾 Vie</button>
+        <button style="background:var(--g2)" onclick="G('impRec').click()">📂 Tuo</button>
+        <button style="background:var(--g2)" onclick="expXL()">📊 Excel</button>
+        <button style="background:var(--navy2);color:#fff" onclick="showDash()">← Asiakkaat</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL: ASIAKAS ══ -->
-<div class="overlay" id="clientOverlay">
+<!-- CLIENT MODAL -->
+<div class="ov" id="ovCl">
   <div class="mbox">
-    <div class="mhead">
-      <h2 id="cmTitle">Asiakas</h2>
-      <button class="mclose" onclick="closeClientModal()">✕</button>
+    <div class="mhd"><h2 id="clT">Asiakas</h2><button class="mcl" onclick="closeCl()">✕</button></div>
+    <div class="fg"><label>Yrityksen nimi *</label><input id="cN" placeholder="esim. Järvenpään Tuotetekno Oy"></div>
+    <div class="r2">
+      <div class="fg"><label>Y-tunnus</label><input id="cY" placeholder="1234567-8"></div>
+      <div class="fg"><label>Toimiala</label><input id="cA" placeholder="esim. Teollisuus"></div>
     </div>
-    <div class="fg"><label>Yrityksen nimi *</label>
-      <input type="text" id="cNimi" placeholder="esim. Järvenpään Tuotetekno Oy"></div>
-    <div class="fg-row">
-      <div class="fg"><label>Y-tunnus</label>
-        <input type="text" id="cYtunnus" placeholder="1234567-8"></div>
-      <div class="fg"><label>Toimiala</label>
-        <input type="text" id="cToimiala" placeholder="esim. Teollisuus"></div>
+    <div class="r2">
+      <div class="fg"><label>Yhteyshenkilö</label><input id="cK" placeholder="Nimi"></div>
+      <div class="fg"><label>Puhelin</label><input id="cP" type="tel" placeholder="+358 50 ..."></div>
     </div>
-    <div class="fg"><label>Kontaktihenkilö</label>
-      <input type="text" id="cKontakti" placeholder="Matti Meikäläinen"></div>
-    <div class="fg-row">
-      <div class="fg"><label>Puhelin</label>
-        <input type="tel" id="cPuh" placeholder="040 123 4567"></div>
-      <div class="fg"><label>Sähköposti</label>
-        <input type="email" id="cEmail" placeholder="matti@firma.fi"></div>
-    </div>
-    <div class="fg"><label>Muistiinpano</label>
-      <textarea id="cNotes" placeholder="Lisätiedot asiakkaasta..."></textarea></div>
-    <div class="mfooter2">
-      <button class="bdel" id="cDelBtn" onclick="deleteClient()" style="display:none">🗑️</button>
-      <button class="bcancel" onclick="closeClientModal()">Peruuta</button>
-      <button class="bsave" onclick="saveClient()">💾 Tallenna</button>
+    <div class="fg"><label>Sähköposti</label><input id="cE" type="email" placeholder="email@yritys.fi"></div>
+    <div class="fg"><label>Muistiinpanot</label><textarea id="cNo" placeholder="Lisätiedot..."></textarea></div>
+    <div class="mft">
+      <button class="bc" onclick="closeCl()">Peruuta</button>
+      <button class="bd" id="cDel" onclick="delCl()" style="display:none">🗑️</button>
+      <button class="bs" onclick="saveCl()">💾 Tallenna</button>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL: VAHINKO ══ -->
-<div class="overlay" id="damageOverlay">
+<!-- RECORD MODAL -->
+<div class="ov" id="ovRec">
   <div class="mbox">
-    <div class="mhead">
-      <h2 id="dmTitle">Vahinko</h2>
-      <button class="mclose" onclick="closeDamageModal()">✕</button>
+    <div class="mhd"><h2 id="rT">Vahinko</h2><button class="mcl" onclick="closeRec()">✕</button></div>
+    <div class="fg"><label>Vahinkopäivä</label><input type="date" id="fD"></div>
+    <div class="r2">
+      <div class="fg"><label>Kohde</label><input id="fTg" placeholder="esim. XPT-996"></div>
+      <div class="fg"><label>Tyyppi</label>
+        <select id="fTy"><option>Ajoneuvovahinko</option><option>Liikennevahinko</option><option>Omaisuusvahinko</option></select>
+      </div>
     </div>
-    <div class="fg"><label>Vahinkopäivä</label><input type="date" id="fDate"></div>
-    <div class="fg"><label>Kohde</label><input type="text" id="fTarget" placeholder="esim. XPT-996"></div>
-    <div class="fg-row">
-      <div class="fg"><label>Vahinkotyyppi</label>
-        <select id="fType">
-          <option>Ajoneuvovahinko</option><option>Liikennevahinko</option><option>Omaisuusvahinko</option>
-        </select></div>
-      <div class="fg"><label>Käsittelyn tila</label>
-        <select id="fStatus">
-          <option value="">Avoin</option><option>Käsittelyssä</option>
-          <option>Käsitelty</option><option>Arkistoitu</option>
-        </select></div>
+    <div class="r2">
+      <div class="fg"><label>Tila</label>
+        <select id="fSt"><option value="">Avoin</option><option>Käsittelyssä</option><option>Käsitelty</option><option>Arkistoitu</option></select>
+      </div>
+      <div class="fg"><label>Vahinkotunnus</label><input id="fR" placeholder="24-40326-..."></div>
     </div>
-    <div class="fg"><label>Vahinkotunnus</label>
-      <input type="text" id="fRef" placeholder="esim. 24-40326-06478-6"></div>
     <div class="fg">
       <label>Muistiinpanot</label>
-      <div id="noteList" style="margin-bottom:8px"></div>
-      <div class="nadd-row">
-        <input type="text" id="noteInput" placeholder="Lisää muistiinpano...">
-        <button class="nadd-btn" id="noteAddBtn">Lisää</button>
-      </div>
+      <div id="nList" style="margin-bottom:7px"></div>
+      <div class="nar"><input id="nInp" placeholder="Lisää muistiinpano..."><button class="nab" id="nAdd">Lisää</button></div>
     </div>
     <div class="fg">
-      <label>Liitteet & Kuvat <span style="font-weight:400;color:var(--text2)">(max 2 / vahinko)</span></label>
-      <div class="igrid" id="imgGrid"></div>
-      <button class="addimgbtn" id="addImgBtn">📁 Lisää kuva tai tiedosto</button>
-      <input type="file" id="fileInput" multiple accept="*/*" style="display:none">
+      <label>Liitteet (max 2 · 200KB/kpl)</label>
+      <div class="ig" id="igrid"></div>
+      <button class="aib" id="aib">📁 Lisää tai vedä tiedosto tähän</button>
+      <input type="file" id="fInp" multiple accept="*/*" style="display:none">
     </div>
-    <div class="mfooter2">
-      <button class="bdel" id="dDelBtn" onclick="deleteDamage()" style="display:none">🗑️</button>
-      <button class="bcancel" onclick="closeDamageModal()">Peruuta</button>
-      <button class="bsave" onclick="saveDamage()">💾 Tallenna</button>
+    <div class="mft">
+      <button class="bc" onclick="closeRec()">Peruuta</button>
+      <button class="bs" onclick="saveRec()">💾 Tallenna</button>
     </div>
   </div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VERSION='1.0', PIN='1234';
-const CLIENTS_KEY='vr_clients';
-const DAMAGES_PREFIX='vr_damages_';
-const OLD_KEY='vahinkorekisteri_v8'; // migraatio
+const VER='9.0',PIN='1234',CK='vahingot_v9_clients',EK='vahingot_v9_exp';
+const G=id=>document.getElementById(id);
+let clients=[],records=[],cid=null,recId=null,cNotes=[],cFiles=[],eCid=null,sf='date',sa=false;
 
-// ── STATE ──
-let currentClientId=null;
-let clients=[];
-let damages=[];
-let currentDamageId=null;
-let currentNotes=[], currentFiles=[];
-let sortField='date', sortAsc=false;
+// HELPERS
+const toISO=d=>{if(!d)return'';if(d.includes('-'))return d;if(d.includes('.')){const[dd,mm,yy]=d.split('.');return`${yy}-${mm}-${dd}`;}return d;};
+const fi=iso=>{if(!iso)return'—';if(iso.includes('.'))return iso;const[y,m,d]=iso.split('-');return(!d||!m)?iso:`${d}.${m}.${y}`;};
+const tsi=t=>{if(!t)return'ei koskaan';const s=Math.floor((Date.now()-+t)/1000),mn=Math.floor(s/60),h=Math.floor(mn/60),dy=Math.floor(h/24);return dy>0?dy+'d sitten':h>0?h+'h sitten':mn>5?mn+'min sitten':'juuri nyt';};
+const bc=s=>s?'b-'+s.toLowerCase().replace(/\s/g,''):'b-avoin';
+const bl=s=>s||'Avoin';
+const gid=()=>'i'+Date.now()+Math.random().toString(36).slice(2,6);
+const ck=id=>`vahingot_v9_${id}`;
 
-// ── VIEW ROUTING ──
-function showView(id){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+// STORAGE
+function loadCl(){try{const s=localStorage.getItem(CK);clients=s?JSON.parse(s):[];}catch(e){clients=[];}}
+function saveCls(){try{localStorage.setItem(CK,JSON.stringify(clients));}catch(e){alert('Tallennus epäonnistui.');}}
+function loadRec(id){
+  try{const s=localStorage.getItem(ck(id));records=s?JSON.parse(s):[];}
+  catch(e){records=[];}
+  records=records.map(r=>({...r,date:toISO(r.date||''),files:r.files||r.liitteet||[]}));
 }
-
-// ── HELPERS ──
-function toISO(d){
-  if(!d)return'';
-  if(d.includes('-'))return d;
-  if(d.includes('.')){const[dd,mm,yy]=d.split('.');return`${yy}-${mm}-${dd}`;}
-  return d;
-}
-function fi(iso){
-  if(!iso)return'—';
-  if(iso.includes('.'))return iso;
-  const[y,m,d]=iso.split('-');
-  if(!d||!m||!y)return iso||'—';
-  return`${d}.${m}.${y}`;
-}
-function badgeClass(s){if(!s)return'b-avoin';return'b-'+s.toLowerCase().replace(/\s/g,'');}
-function badgeLabel(s){return s||'Avoin';}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function timeSince(ts){
-  if(!ts)return'ei koskaan';
-  const diff=Date.now()-parseInt(ts);
-  const days=Math.floor(diff/86400000);
-  const hours=Math.floor(diff/3600000);
-  const mins=Math.floor(diff/60000);
-  if(days>0)return days+'d sitten';
-  if(hours>0)return hours+'h sitten';
-  if(mins>5)return mins+'min sitten';
-  return'juuri nyt';
+function saveRecs(){
+  try{localStorage.setItem(ck(cid),JSON.stringify(records));}
+  catch(e){alert('Selainmuisti täynnä! Vie JSON iCloud:iin ensin.');}
 }
 
-// ── STORAGE ──
-function saveClients(){localStorage.setItem(CLIENTS_KEY,JSON.stringify(clients));}
-function saveDamages(){
-  try{localStorage.setItem(DAMAGES_PREFIX+currentClientId,JSON.stringify(damages));}
-  catch(e){alert('Tallennus epäonnistui — muisti täynnä. Vie JSON ensin.');}
-}
-function loadDamages(clientId){
-  try{
-    const s=localStorage.getItem(DAMAGES_PREFIX+clientId);
-    const data=s?JSON.parse(s):[];
-    return data.map(r=>({...r,date:toISO(r.date||'')}));
-  }catch(e){return[];}
-}
-function getDamageStats(clientId){
-  const d=loadDamages(clientId);
-  return{
-    total:d.length,
-    open:d.filter(r=>!r.status).length,
-    proc:d.filter(r=>r.status==='Käsittelyssä').length,
-    done:d.filter(r=>r.status==='Käsitelty').length
-  };
-}
-
-// ── MIGRATION ──
-function migrate(){
-  const old=localStorage.getItem(OLD_KEY);
-  if(!old||clients.length>0)return;
-  try{
-    const data=JSON.parse(old);
-    if(!Array.isArray(data)||data.length===0)return;
-    const name=prompt(`Löydettiin ${data.length} vanhaa vahinkoa.\n\nMikä on tämän asiakkaan nimi?`,'AJarmo Oy');
-    if(!name)return;
-    const id=uid();
-    clients.push({id,nimi:name,ytunnus:'',toimiala:'',kontakti:'',puh:'',email:'',notes:'',luotu:new Date().toISOString()});
-    localStorage.setItem(DAMAGES_PREFIX+id,old);
-    saveClients();
-  }catch(e){}
-}
-
-// ── PIN ──
+// PIN
 function initPin(){
-  const row=document.getElementById('pinRow');
-  row.innerHTML='';
+  const row=G('pinRow');row.innerHTML='';
   for(let i=0;i<4;i++){
     const b=document.createElement('input');
     b.type='password';b.className='pbox';b.maxLength='1';b.inputMode='numeric';
@@ -566,447 +413,317 @@ function initPin(){
 function tryLogin(){
   const pin=[...document.querySelectorAll('.pbox')].map(x=>x.value).join('');
   if(pin===PIN){
-    try{clients=JSON.parse(localStorage.getItem(CLIENTS_KEY)||'[]');}catch(e){clients=[];}
-    migrate();
-    showView('vHallinta');
-    renderClients();
-    renderGlobalStats();
+    G('login').classList.add('gone');
+    loadCl();migrate();showDash();
   } else {
-    document.getElementById('perr').textContent='Väärä PIN-koodi.';
+    G('perr').textContent='Väärä PIN-koodi.';
     document.querySelectorAll('.pbox').forEach(x=>x.value='');
     document.querySelector('.pbox').focus();
   }
 }
 function logout(){if(confirm('Kirjaudu ulos?'))location.reload();}
 
-// ══════════════════════════
-// HALLINTAPANEELI
-// ══════════════════════════
-function renderGlobalStats(){
-  let total=0,open=0,proc=0,done=0;
-  clients.forEach(c=>{
-    const s=getDamageStats(c.id);
-    total+=s.total;open+=s.open;proc+=s.proc;done+=s.done;
-  });
-  document.getElementById('gs-clients').textContent=clients.length;
-  document.getElementById('gs-open').textContent=open;
-  document.getElementById('gs-proc').textContent=proc;
-  document.getElementById('gs-done').textContent=done;
-  document.getElementById('hpStats').textContent=`${clients.length} asiakasta · ${total} vahinkoa · v${VERSION}`;
+// MIGRATE OLD DATA
+function migrate(){
+  const old=localStorage.getItem('vahinkorekisteri_v8');
+  if(!old||clients.length)return;
+  try{
+    const data=JSON.parse(old);
+    if(!Array.isArray(data)||!data.length)return;
+    const nimi=prompt('Löydettiin aiempi data ('+data.length+' vahinkoa).\n\nSyötä asiakkaan nimi:','Asiakas 1');
+    if(!nimi)return;
+    const nc={id:gid(),nimi,ytunnus:'',toimiala:'',kontakti:'',puh:'',email:'',notes:'Migroitu v8:sta'};
+    clients.push(nc);saveCls();
+    localStorage.setItem(ck(nc.id),old);
+    localStorage.removeItem('vahinkorekisteri_v8');
+  }catch(e){}
 }
 
-function renderClients(){
-  const q=document.getElementById('clientSearch').value.toLowerCase();
-  const filtered=clients.filter(c=>
-    c.nimi.toLowerCase().includes(q)||(c.ytunnus||'').includes(q)
-  );
-  const grid=document.getElementById('clientsGrid');
-  if(!filtered.length){
-    grid.innerHTML=`<div class="empty-clients" style="grid-column:1/-1">
-      <div class="icon">🏢</div>
-      <h2>${q?'Ei tuloksia':'Ei asiakkaita vielä'}</h2>
-      <p>${q?'Tarkista hakusana':'Lisää ensimmäinen asiakas ＋ napista'}</p>
-    </div>`;
+// NAVIGATION
+function showView(v){['vD','vR'].forEach(id=>G(id).classList.add('hidden'));G(v).classList.remove('hidden');}
+function showDash(){cid=null;records=[];renderCl();updDash();showView('vD');}
+function showReg(id){
+  cid=id;loadRec(id);
+  const cl=clients.find(c=>c.id===id);
+  G('rName').textContent='📋 '+(cl?.nimi||'Vahinkorekisteri');
+  sf='date';sa=false;renderT();showView('vR');
+}
+
+// DASHBOARD
+function getStats(id){
+  try{
+    const s=localStorage.getItem(ck(id));const r=s?JSON.parse(s):[];
+    return{total:r.length,open:r.filter(x=>!x.status).length,proc:r.filter(x=>x.status==='Käsittelyssä').length,
+      done:r.filter(x=>x.status==='Käsitelty').length,last:r.filter(x=>x.date).sort((a,b)=>toISO(b.date)>toISO(a.date)?1:-1)[0]?.date||''};
+  }catch(e){return{total:0,open:0,proc:0,done:0,last:''};}
+}
+function updDash(){
+  let tot=0,op=0,pr=0,dn=0;
+  clients.forEach(c=>{const s=getStats(c.id);tot+=s.total;op+=s.open;pr+=s.proc;dn+=s.done;});
+  G('dsC').textContent=clients.length;G('dsO').textContent=op;G('dsP').textContent=pr;G('dsD').textContent=dn;
+  G('dStat').textContent=clients.length+' asiakasta · '+tot+' vahinkoa yhteensä · v'+VER;
+  G('dVer').textContent='Vahinkohallinta v'+VER+' · Vie kaikki: '+tsi(localStorage.getItem(EK));
+}
+function renderCl(){
+  const q=(G('cSrch').value||'').toLowerCase();
+  const f=clients.filter(c=>c.nimi.toLowerCase().includes(q)||(c.ytunnus||'').includes(q));
+  const g=G('cgrid');
+  if(!f.length){
+    g.innerHTML='<div class="edash"><div>🏢</div><p>'+(clients.length?'Ei hakutuloksia.':'Ei asiakkaita vielä.<br>Paina ＋ Uusi asiakas.')+'</p></div>';
     return;
   }
-  grid.innerHTML=filtered.map(c=>{
-    const s=getDamageStats(c.id);
-    const cardClass=s.open>0?'has-open':s.proc>0?'has-proc':s.total>0?'all-done':'empty';
-    return`<div class="client-card ${cardClass}" data-cid="${c.id}">
-      <div class="cc-header">
-        <div>
-          <div class="cc-name">🏢 ${c.nimi}</div>
-          ${c.ytunnus?`<div class="cc-ytunnus">Y-tunnus: ${c.ytunnus}</div>`:''}
-        </div>
-        <button class="cc-edit-btn" data-edit="${c.id}" onclick="event.stopPropagation();openClientModal('${c.id}')">✏️</button>
-      </div>
-      ${(c.kontakti||c.puh||c.email)?`<div class="cc-contact">
-        ${c.kontakti?`<span>👤 ${c.kontakti}</span>`:''}
-        ${c.puh?`<span>📞 ${c.puh}</span>`:''}
-      </div>`:''}
-      <div class="cc-footer">
-        <span class="cc-badge cc-total">📋 ${s.total}</span>
-        ${s.open?`<span class="cc-badge cc-open">⚠️ ${s.open} avoin</span>`:''}
-        ${s.proc?`<span class="cc-badge cc-proc">⏳ ${s.proc}</span>`:''}
-        ${s.done?`<span class="cc-badge cc-done">✅ ${s.done}</span>`:''}
-        <span class="cc-arrow">→</span>
-      </div>
-    </div>`;
+  g.innerHTML=f.map(c=>{
+    const s=getStats(c.id);
+    return '<div class="ccard" data-cid="'+c.id+'">'
+      +'<div class="cc-h"><h3>🏢 '+c.nimi+'</h3>'
+      +'<small>'+(c.ytunnus?'Y: '+c.ytunnus:'')+(c.toimiala?' · '+c.toimiala:'')+'</small></div>'
+      +'<div class="cc-b">'
+      +'<div class="ccs-g">'
+      +'<div class="ccs"><div class="n">'+s.total+'</div><div class="l">Vahinkoa</div></div>'
+      +'<div class="ccs r"><div class="n">'+s.open+'</div><div class="l">Avoinna</div></div>'
+      +'<div class="ccs o"><div class="n">'+s.proc+'</div><div class="l">Käsittelyssä</div></div>'
+      +'</div>'
+      +(s.last?'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Viimeisin: '+fi(s.last)+'</div>':'')
+      +(c.kontakti?'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">👤 '+c.kontakti+(c.puh?' · '+c.puh:'')+'</div>':'')
+      +'<div class="cc-f">'
+      +'<button class="ccb p oreg" data-cid="'+c.id+'">📋 Avaa rekisteri</button>'
+      +'<button class="ccb s ecl" data-cid="'+c.id+'">✏️ Muokkaa</button>'
+      +'</div></div></div>';
   }).join('');
-  renderGlobalStats();
 }
 
-// Client cards click (delegation)
-document.getElementById('clientsGrid').addEventListener('click',e=>{
-  const card=e.target.closest('.client-card[data-cid]');
-  if(card&&!e.target.closest('[data-edit]'))openClient(card.dataset.cid);
-});
-
-function openClient(clientId){
-  currentClientId=clientId;
-  const c=clients.find(x=>x.id===clientId);
-  damages=loadDamages(clientId);
-  document.getElementById('vrTitle').textContent=c.nimi;
-  sortField='date';sortAsc=false;
-  document.getElementById('sSearch').value='';
-  document.getElementById('sType').value='';
-  document.getElementById('sStatus').value='';
-  document.getElementById('mSearch').value='';
-  document.getElementById('mStatus').value='';
-  showView('vVahinko');
-  renderTable();
+// CLIENT CRUD
+function openCl(id){
+  eCid=id||null;
+  const cl=id?clients.find(c=>c.id===id):null;
+  G('clT').textContent=cl?'Muokkaa asiakasta':'Uusi asiakas';
+  G('cN').value=cl?.nimi||'';G('cY').value=cl?.ytunnus||'';G('cA').value=cl?.toimiala||'';
+  G('cK').value=cl?.kontakti||'';G('cP').value=cl?.puh||'';G('cE').value=cl?.email||'';G('cNo').value=cl?.notes||'';
+  G('cDel').style.display=cl?'block':'none';
+  G('ovCl').classList.add('on');
+  setTimeout(()=>G('cN').focus(),80);
 }
-function goBack(){
-  currentClientId=null;damages=[];
-  showView('vHallinta');
-  renderClients();
-  renderGlobalStats();
+function closeCl(){G('ovCl').classList.remove('on');eCid=null;}
+function saveCl(){
+  const nimi=G('cN').value.trim();if(!nimi){alert('Syötä yrityksen nimi!');return;}
+  const cl={id:eCid||gid(),nimi,ytunnus:G('cY').value.trim(),toimiala:G('cA').value.trim(),
+    kontakti:G('cK').value.trim(),puh:G('cP').value.trim(),email:G('cE').value.trim(),notes:G('cNo').value.trim()};
+  if(eCid){const i=clients.findIndex(c=>c.id===eCid);if(i>=0)clients[i]=cl;}
+  else clients.push(cl);
+  saveCls();closeCl();renderCl();updDash();
 }
-
-// ── CLIENT MODAL ──
-let editClientId=null;
-function openClientModal(id=null){
-  editClientId=id;
-  const c=id?clients.find(x=>x.id===id):null;
-  document.getElementById('cmTitle').textContent=c?c.nimi:'Uusi asiakas';
-  document.getElementById('cNimi').value=c?c.nimi:'';
-  document.getElementById('cYtunnus').value=c?c.ytunnus||'':'';
-  document.getElementById('cToimiala').value=c?c.toimiala||'':'';
-  document.getElementById('cKontakti').value=c?c.kontakti||'':'';
-  document.getElementById('cPuh').value=c?c.puh||'':'';
-  document.getElementById('cEmail').value=c?c.email||'':'';
-  document.getElementById('cNotes').value=c?c.notes||'':'';
-  document.getElementById('cDelBtn').style.display=c?'block':'none';
-  document.getElementById('clientOverlay').classList.add('on');
-  setTimeout(()=>document.getElementById('cNimi').focus(),100);
-}
-function closeClientModal(){document.getElementById('clientOverlay').classList.remove('on');}
-function saveClient(){
-  const nimi=document.getElementById('cNimi').value.trim();
-  if(!nimi){alert('Syötä yrityksen nimi');document.getElementById('cNimi').focus();return;}
-  const c={
-    id:editClientId||uid(),nimi,
-    ytunnus:document.getElementById('cYtunnus').value.trim(),
-    toimiala:document.getElementById('cToimiala').value.trim(),
-    kontakti:document.getElementById('cKontakti').value.trim(),
-    puh:document.getElementById('cPuh').value.trim(),
-    email:document.getElementById('cEmail').value.trim(),
-    notes:document.getElementById('cNotes').value.trim(),
-    luotu:editClientId?(clients.find(x=>x.id===editClientId)||{}).luotu||new Date().toISOString():new Date().toISOString()
-  };
-  const idx=clients.findIndex(x=>x.id===c.id);
-  if(idx>=0)clients[idx]=c;else clients.push(c);
-  saveClients();closeClientModal();renderClients();
-}
-function deleteClient(){
-  const c=clients.find(x=>x.id===editClientId);
-  if(!c)return;
-  const s=getDamageStats(editClientId);
-  if(!confirm(`Poista asiakas "${c.nimi}"?\n\nAsiakkaalla on ${s.total} vahinkoa. Kaikki poistetaan!\n\nTätä ei voi perua!`))return;
-  clients=clients.filter(x=>x.id!==editClientId);
-  localStorage.removeItem(DAMAGES_PREFIX+editClientId);
-  saveClients();closeClientModal();renderClients();
+function delCl(){
+  if(!eCid)return;
+  const cl=clients.find(c=>c.id===eCid);
+  const s=getStats(eCid);
+  if(!confirm('Poistetaanko "'+cl?.nimi+'"?\n'+s.total+' vahinkoa poistetaan.\nEi voi perua!'))return;
+  localStorage.removeItem(ck(eCid));
+  clients=clients.filter(c=>c.id!==eCid);
+  saveCls();closeCl();renderCl();updDash();
 }
 
-// ══════════════════════════
-// VAHINKOREKISTERI
-// ══════════════════════════
-function updateVRStats(){
-  const n=damages.length;
-  document.getElementById('st').textContent=n;
-  document.getElementById('so').textContent=damages.filter(r=>!r.status).length;
-  document.getElementById('sp').textContent=damages.filter(r=>r.status==='Käsittelyssä').length;
-  document.getElementById('sd').textContent=damages.filter(r=>r.status==='Käsitelty').length;
-  document.getElementById('vrStats').textContent=`${n} vahinkoa · ${damages.filter(r=>!r.status).length} avoinna`;
-}
-
-function setSort(f){
-  if(sortField===f)sortAsc=!sortAsc;
-  else{sortField=f;sortAsc=(f==='date'?false:true);}
-  renderTable();
-}
-
-function renderTable(){
-  const q=document.getElementById('sSearch').value.toLowerCase();
-  const tf=document.getElementById('sType').value;
-  const sf=document.getElementById('sStatus').value;
-  let rows=damages.filter(r=>{
-    const ms=r.target.toLowerCase().includes(q)||(r.ref||'').toLowerCase().includes(q);
+// REGISTRY
+function srt(f){if(sf===f)sa=!sa;else{sf=f;sa=(f==='date'?false:true);}renderT();}
+function renderT(){
+  const q=G('sS').value.toLowerCase(),tf=G('sTy').value,stf=G('sSt').value;
+  const exT=localStorage.getItem(EK+'_'+cid);
+  G('st').textContent=records.length;
+  G('so').textContent=records.filter(r=>!r.status).length;
+  G('sp').textContent=records.filter(r=>r.status==='Käsittelyssä').length;
+  G('sd').textContent=records.filter(r=>r.status==='Käsitelty').length;
+  G('rStat').textContent=records.length+' vahinkoa · '+records.filter(r=>!r.status).length+' avoinna · Varmuus: '+tsi(exT);
+  let rows=records.filter(r=>{
+    const ms=(r.target||'').toLowerCase().includes(q)||(r.ref||'').toLowerCase().includes(q);
     const mt=!tf||r.type===tf;
-    const mst=!sf||(sf==='avoin'?!r.status:r.status===sf);
+    const mst=!stf||(stf==='avoin'?!r.status:r.status===stf);
     return ms&&mt&&mst;
   });
   rows.sort((a,b)=>{
     let av,bv;
-    if(sortField==='date'){
-      av=new Date(a.date||'9999-12-31').getTime();
-      bv=new Date(b.date||'9999-12-31').getTime();
-    } else if(sortField==='fileCount'){av=a.files.length;bv=b.files.length;}
-    else{av=(a[sortField]||'').toLowerCase();bv=(b[sortField]||'').toLowerCase();}
-    return av<bv?(sortAsc?-1:1):av>bv?(sortAsc?1:-1):0;
+    if(sf==='date'){av=new Date(a.date||'9999-12-31').getTime();bv=new Date(b.date||'9999-12-31').getTime();}
+    else if(sf==='fc'){av=a.files.length;bv=b.files.length;}
+    else{av=(a[sf]||'').toLowerCase();bv=(b[sf]||'').toLowerCase();}
+    return av<bv?(sa?-1:1):av>bv?(sa?1:-1):0;
   });
-  ['date','target','type','status','ref','fileCount'].forEach(f=>{
-    const el=document.getElementById('th-'+f);
-    if(el)el.className=sortField===f?(sortAsc?'asc':'desc'):'';
+  ['date','target','type','status','ref','fc'].forEach(f=>{
+    const el=G('th-'+f);if(el)el.className=sf===f?(sa?'asc':'desc'):'';
   });
-  const tbody=document.getElementById('tbody');
-  if(!rows.length){
-    tbody.innerHTML='<tr class="empty-row"><td colspan="6">Ei vahinkoja</td></tr>';
-    updateVRStats();return;
-  }
-  tbody.innerHTML=rows.map(r=>`
-    <tr data-id="${r.id}">
-      <td>${fi(r.date)}</td>
-      <td><strong>${r.target}</strong>${r.notes.length?' 📝':''}</td>
-      <td>${r.type}</td>
-      <td><span class="badge ${badgeClass(r.status)}">${badgeLabel(r.status)}</span></td>
-      <td>${r.ref||'—'}</td>
-      <td><span class="imgcount${r.files.length?' has':''}">${r.files.length?'🖼 '+r.files.length:'—'}</span></td>
-    </tr>`).join('');
-  updateVRStats();
+  const tb=G('tbody');
+  if(!rows.length){tb.innerHTML='<tr class="er"><td colspan="6">Ei vahinkoja. Paina ＋ Uusi.</td></tr>';return;}
+  tb.innerHTML=rows.map(r=>{
+    const fc=r.files.length;
+    return '<tr data-id="'+r.id+'">'
+      +'<td>'+fi(r.date)+'</td>'
+      +'<td><strong>'+r.target+'</strong>'+(r.notes.length?' 📝':'')+'</td>'
+      +'<td>'+r.type+'</td>'
+      +'<td><span class="badge '+bc(r.status)+'">'+bl(r.status)+'</span></td>'
+      +'<td>'+(r.ref||'—')+'</td>'
+      +'<td><span class="ic'+(fc?' has':'')+'">'+( fc?'🖼 '+fc:'—')+'</span></td>'
+      +'</tr>';
+  }).join('');
 }
 
-// Row click
-document.getElementById('tbody').addEventListener('click',e=>{
-  const row=e.target.closest('tr[data-id]');
-  if(row)openEditDamage(row.dataset.id);
-});
-
-// ── DAMAGE MODAL ──
-function openNewDamage(){
-  currentDamageId='NEW-'+uid();currentNotes=[];currentFiles=[];
-  document.getElementById('dmTitle').textContent='Uusi vahinko';
-  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('fTarget').value='';
-  document.getElementById('fType').value='Ajoneuvovahinko';
-  document.getElementById('fStatus').value='';
-  document.getElementById('fRef').value='';
-  document.getElementById('noteInput').value='';
-  document.getElementById('dDelBtn').style.display='none';
-  renderNotes();renderImages();
-  document.getElementById('damageOverlay').classList.add('on');
-  setTimeout(()=>document.getElementById('fTarget').focus(),100);
+// RECORD MODAL
+function openNew(){
+  recId=gid();cNotes=[];cFiles=[];
+  G('rT').textContent='Uusi vahinko';
+  G('fD').value=new Date().toISOString().split('T')[0];
+  G('fTg').value='';G('fTy').value='Ajoneuvovahinko';G('fSt').value='';G('fR').value='';G('nInp').value='';
+  renderNotes();renderImgs();G('ovRec').classList.add('on');
+  setTimeout(()=>G('fTg').focus(),80);
 }
-function openEditDamage(id){
-  const r=damages.find(x=>x.id===id);if(!r)return;
-  currentDamageId=id;currentNotes=[...r.notes];currentFiles=r.files.map(f=>({...f}));
-  document.getElementById('dmTitle').textContent=r.target;
-  document.getElementById('fDate').value=r.date||'';
-  document.getElementById('fTarget').value=r.target;
-  document.getElementById('fType').value=r.type;
-  document.getElementById('fStatus').value=r.status;
-  document.getElementById('fRef').value=r.ref||'';
-  document.getElementById('noteInput').value='';
-  document.getElementById('dDelBtn').style.display='block';
-  renderNotes();renderImages();
-  document.getElementById('damageOverlay').classList.add('on');
+function openEdit(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  recId=id;cNotes=[...r.notes];cFiles=r.files.map(f=>({...f}));
+  G('rT').textContent=r.target;G('fD').value=r.date||'';G('fTg').value=r.target;
+  G('fTy').value=r.type;G('fSt').value=r.status;G('fR').value=r.ref||'';G('nInp').value='';
+  renderNotes();renderImgs();G('ovRec').classList.add('on');
 }
-function closeDamageModal(){
-  document.getElementById('damageOverlay').classList.remove('on');
-  currentDamageId=null;currentNotes=[];currentFiles=[];
-}
-function deleteDamage(){
-  if(!confirm('Poista vahinko?'))return;
-  damages=damages.filter(r=>r.id!==currentDamageId);
-  saveDamages();closeDamageModal();renderTable();
-}
-
-// Notes
+function closeRec(){G('ovRec').classList.remove('on');recId=null;cNotes=[];cFiles=[];}
 function renderNotes(){
-  document.getElementById('noteList').innerHTML=currentNotes.map((n,i)=>
-    `<div class="nitem"><span>${n}</span><button class="ndel" data-ni="${i}">✕</button></div>`
+  G('nList').innerHTML=cNotes.map((n,i)=>'<div class="ni"><span>'+n+'</span><button class="nd" data-ni="'+i+'">✕</button></div>').join('');
+}
+function addNote(){const v=G('nInp').value.trim();if(!v)return;cNotes.push(v);G('nInp').value='';renderNotes();}
+function fIcon(n){const e=(n.split('.').pop()||'').toLowerCase();return e==='pdf'?'📄':['doc','docx'].includes(e)?'📝':['xls','xlsx'].includes(e)?'📊':['ppt','pptx'].includes(e)?'📑':'📎';}
+function renderImgs(){
+  G('igrid').innerHTML=cFiles.map((f,i)=>
+    '<div class="itr">'
+    +(f.data.startsWith('data:image')?'<img src="'+f.data+'" loading="lazy">'
+      :'<div class="ifl" style="font-size:24px">'+fIcon(f.name)+'<small>'+f.name.slice(0,14)+'</small></div>')
+    +'<button class="idl" data-ii="'+i+'">✕</button></div>'
   ).join('');
 }
-function addNote(){
-  const inp=document.getElementById('noteInput');
-  const v=inp.value.trim();if(!v)return;
-  currentNotes.push(v);inp.value='';renderNotes();
-}
-
-// Images
-function fileIcon(name){
-  const ext=(name.split('.').pop()||'').toLowerCase();
-  if(ext==='pdf')return'📄';
-  if(['doc','docx'].includes(ext))return'📝';
-  if(['xls','xlsx'].includes(ext))return'📊';
-  return'📎';
-}
-function renderImages(){
-  document.getElementById('imgGrid').innerHTML=currentFiles.map((f,i)=>
-    `<div class="ithumb">
-      ${f.data.startsWith('data:image')
-        ?`<img src="${f.data}" loading="lazy">`
-        :`<div class="ifile" style="font-size:28px;flex-direction:column;gap:4px">
-            ${fileIcon(f.name)}<small style="font-size:10px;color:#555">${f.name.slice(0,14)}</small></div>`}
-      <button class="idel" data-ii="${i}">✕</button>
-    </div>`
-  ).join('');
-}
-function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
+function compress(file){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=e=>{
       const img=new Image();
       img.onload=()=>{
-        const MAX=1200;
-        const ratio=Math.min(MAX/img.width,MAX/img.height,1);
+        const ratio=Math.min(1200/img.width,1200/img.height,1);
         const c=document.createElement('canvas');
         c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);
         c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        let quality=.82,data=c.toDataURL('image/jpeg',quality);
-        while(new Blob([data]).size>200000&&quality>0.3){quality-=0.1;data=c.toDataURL('image/jpeg',quality);}
-        resolve(new Blob([data]).size>200000?null:{name:file.name,data});
+        let q=.82,data=c.toDataURL('image/jpeg',q);
+        while(new Blob([data]).size>200000&&q>0.3){q-=0.1;data=c.toDataURL('image/jpeg',q);}
+        res(new Blob([data]).size>200000?null:{name:file.name,data});
       };
       img.src=e.target.result;
     };
-    reader.readAsDataURL(file);
+    r.readAsDataURL(file);
   });
 }
 function handleFiles(files){
-  if(currentFiles.length>=2){alert('❌ Maksimi 2 liitettä per vahinko.');return;}
-  const canAdd=2-currentFiles.length;
-  if(files.length>canAdd)alert(`⚠️ Voit lisätä vielä ${canAdd} liitettä.`);
-  const toAdd=[...files].slice(0,canAdd);
-  Promise.all(toAdd.map(f=>
-    f.type.startsWith('image/')?compressImage(f):new Promise(res=>{
+  if(cFiles.length>=2){alert('Maksimi 2 liitettä per vahinko.');return;}
+  const can=2-cFiles.length;
+  if(files.length>can)alert('Voit lisätä vielä '+can+' liitteen.');
+  Promise.all([...files].slice(0,can).map(f=>
+    f.type.startsWith('image/')?compress(f):new Promise(res=>{
       const r=new FileReader();r.onload=e=>res({name:f.name,data:e.target.result});r.readAsDataURL(f);
     })
-  )).then(results=>{
-    currentFiles.push(...results.filter(r=>r!==null));renderImages();
-  });
+  )).then(res=>{cFiles.push(...res.filter(r=>r!==null));renderImgs();});
 }
+function saveRec(){
+  const tg=G('fTg').value.trim();if(!tg){alert('Syötä kohde!');G('fTg').focus();return;}
+  const rec={id:recId,date:G('fD').value,target:tg,type:G('fTy').value,
+    status:G('fSt').value,ref:G('fR').value.trim(),notes:[...cNotes],files:[...cFiles]};
+  const i=records.findIndex(r=>r.id===recId);
+  if(i>=0)records[i]=rec;else records.push(rec);
+  saveRecs();closeRec();renderT();
+}
+function delAll(){if(confirm('Poista KAIKKI tämän asiakkaan vahingot?')){records=[];saveRecs();renderT();}}
 
-function saveDamage(){
-  const target=document.getElementById('fTarget').value.trim();
-  if(!target){alert('Syötä kohde!');document.getElementById('fTarget').focus();return;}
-  const rec={
-    id:currentDamageId,date:document.getElementById('fDate').value,target,
-    type:document.getElementById('fType').value,status:document.getElementById('fStatus').value,
-    ref:document.getElementById('fRef').value.trim(),
-    notes:[...currentNotes],files:[...currentFiles]
-  };
-  const idx=damages.findIndex(r=>r.id===currentDamageId);
-  if(idx>=0)damages[idx]=rec;else damages.push(rec);
-  saveDamages();closeDamageModal();renderTable();
-}
-function deleteAllDamages(){
-  if(confirm('Poista kaikki tämän asiakkaan vahingot?\n\nTätä ei voi perua!')){
-    damages=[];saveDamages();renderTable();
-  }
-}
-
-// ── EXPORT / IMPORT ──
-function exportClientJSON(){
-  const c=clients.find(x=>x.id===currentClientId);
-  const pkg={client:c,damages};
-  const json=JSON.stringify(pkg,null,2);
-  const mb=(new Blob([json]).size/1024/1024).toFixed(1);
+// EXPORT / IMPORT
+function expRec(){
+  const json=JSON.stringify(records,null,2);
+  const cl=clients.find(c=>c.id===cid);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
-  a.download=`vahingot_${(c.nimi||'asiakas').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.json`;
+  a.download='vahingot_'+(cl?.nimi||'asiakas').replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
-  alert(`✅ ${c.nimi} (${damages.length} vahinkoa) ladattu (${mb} MB)`);
+  localStorage.setItem(EK+'_'+cid,Date.now());renderT();
+  alert('✅ Viety ('+( new Blob([json]).size/1024).toFixed(0)+'KB)\n\n'
+    +'Siirrä Files-apissa iCloud Driveen\ntai lataa toisella laitteella "📂 Tuo JSON".');
 }
-function exportAllJSON(){
-  const pkg=clients.map(c=>({client:c,damages:loadDamages(c.id)}));
-  const json=JSON.stringify(pkg,null,2);
-  const mb=(new Blob([json]).size/1024/1024).toFixed(1);
+function impRec(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    G('impRec').value='';
+    let data;try{data=JSON.parse(e.target.result);}catch(e){alert('❌ Virheellinen JSON.');return;}
+    if(!Array.isArray(data)){alert('❌ Virheellinen rakenne.');return;}
+    if(!confirm('Tuodaan '+data.length+' vahinkoa. Korvataanko nykyiset?'))return;
+    records=data.map(r=>({...r,date:toISO(r.date||''),files:r.files||r.liitteet||[]}));
+    saveRecs();renderT();alert('✅ Tuonti onnistui! '+data.length+' vahinkoa.');
+  };
+  r.onerror=()=>{G('impRec').value='';alert('❌ Luku epäonnistui.');};
+  r.readAsText(file,'UTF-8');
+}
+function exportAll(){
+  const payload={version:VER,exported:new Date().toISOString(),clients,records:{}};
+  clients.forEach(c=>{try{const s=localStorage.getItem(ck(c.id));payload.records[c.id]=s?JSON.parse(s):[];}catch(e){payload.records[c.id]=[];}});
+  const json=JSON.stringify(payload,null,2);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
-  a.download=`vakuutushallinta_kaikki_${new Date().toISOString().slice(0,10)}.json`;
+  a.download='vahinkohallinta_kaikki_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
-  alert(`✅ Kaikki asiakkaat (${clients.length} kpl) ladattu (${mb} MB)`);
+  localStorage.setItem(EK,Date.now());updDash();
+  alert('✅ Kaikki asiakkaat viety ('+( new Blob([json]).size/1024/1024).toFixed(1)+'MB) · '+clients.length+' asiakasta');
 }
-function importClientJSON(){
-  const input=document.getElementById('importClientFile');
-  const file=input.files[0];if(!file)return;
+function impAll(file){
   const r=new FileReader();
   r.onload=e=>{
-    input.value='';
-    try{
-      const pkg=JSON.parse(e.target.result);
-      // Tuki sekä {client,damages} että suoralle taulukolle
-      const data=Array.isArray(pkg)?pkg:pkg.damages||pkg;
-      if(!Array.isArray(data))throw new Error();
-      if(!confirm(`Tuodaan ${data.length} vahinkoa.\n\nKorvataanko nykyiset?`))return;
-      damages=data.map(r=>({...r,date:toISO(r.date||'')}));
-      saveDamages();renderTable();
-      alert(`✅ Tuonti onnistui! ${data.length} vahinkoa.`);
-    }catch(err){alert('❌ Virheellinen tiedosto.');}
+    G('impAll').value='';
+    let data;try{data=JSON.parse(e.target.result);}catch(e){alert('❌ Virheellinen JSON.');return;}
+    if(!data.clients){alert('❌ Virheellinen rakenne.');return;}
+    if(!confirm('Tuodaan '+data.clients.length+' asiakasta. Korvataanko kaikki nykyiset tiedot?'))return;
+    clients=data.clients;saveCls();
+    clients.forEach(c=>{if(data.records?.[c.id])localStorage.setItem(ck(c.id),JSON.stringify(data.records[c.id]));});
+    renderCl();updDash();alert('✅ Tuonti onnistui! '+clients.length+' asiakasta.');
   };
-  r.onerror=()=>{input.value='';alert('❌ Tiedostoa ei voitu lukea.');};
+  r.onerror=()=>{G('impAll').value='';alert('❌ Luku epäonnistui.');};
   r.readAsText(file,'UTF-8');
 }
-function importAllJSON(){
-  const input=document.getElementById('importAllFile');
-  const file=input.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=e=>{
-    input.value='';
-    try{
-      const pkg=JSON.parse(e.target.result);
-      if(!Array.isArray(pkg))throw new Error();
-      if(!confirm(`Tuodaan ${pkg.length} asiakasta kaikkine vahinkoineen.\n\nKorvataanko nykyiset tiedot?`))return;
-      clients=pkg.map(p=>p.client);
-      pkg.forEach(p=>localStorage.setItem(DAMAGES_PREFIX+p.client.id,JSON.stringify(p.damages||[])));
-      saveClients();renderClients();renderGlobalStats();
-      alert(`✅ Tuonti onnistui! ${pkg.length} asiakasta.`);
-    }catch(err){alert('❌ Virheellinen tiedosto.');}
-  };
-  r.onerror=()=>{input.value='';alert('❌ Tiedostoa ei voitu lukea.');};
-  r.readAsText(file,'UTF-8');
-}
-function exportExcel(){
-  const c=clients.find(x=>x.id===currentClientId);
-  const ws=XLSX.utils.json_to_sheet(damages.map(r=>({
-    'Päivä':fi(r.date),'Kohde':r.target,'Tyyppi':r.type,
-    'Tila':badgeLabel(r.status),'Vahinkotunnus':r.ref||'',
-    'Muistiinpanot':r.notes.join('; '),'Liitteet':r.files.length
-  })));
+function expXL(){
+  const cl=clients.find(c=>c.id===cid);
+  const ws=XLSX.utils.json_to_sheet(records.map(r=>({'Päivä':fi(r.date),'Kohde':r.target,'Tyyppi':r.type,'Tila':bl(r.status),'Vahinkotunnus':r.ref||'','Muistiinpanot':r.notes.join('; '),'Liitteet':r.files.length})));
   ws['!cols']=[10,14,20,14,24,40,8].map(w=>({wch:w}));
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,(c?c.nimi:'Vahingot').slice(0,31));
-  XLSX.writeFile(wb,`vahingot_${(c?c.nimi:'').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vahingot');
+  XLSX.writeFile(wb,'vahingot_'+(cl?.nimi||'asiakas')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-// ── INIT ──
+// INIT
 document.addEventListener('DOMContentLoaded',()=>{
   initPin();
-  // Table row click
-  document.getElementById('noteList').addEventListener('click',e=>{
-    const btn=e.target.closest('[data-ni]');
-    if(btn){currentNotes.splice(+btn.dataset.ni,1);renderNotes();}
+  // Dashboard: klikki
+  G('cgrid').addEventListener('click',e=>{
+    const ob=e.target.closest('.oreg');if(ob){showReg(ob.dataset.cid);return;}
+    const eb=e.target.closest('.ecl');if(eb){openCl(eb.dataset.cid);return;}
+    const cc=e.target.closest('.ccard');if(cc&&!e.target.closest('button'))showReg(cc.dataset.cid);
   });
-  document.getElementById('imgGrid').addEventListener('click',e=>{
-    const btn=e.target.closest('[data-ii]');
-    if(btn){currentFiles.splice(+btn.dataset.ii,1);renderImages();}
-  });
-  document.getElementById('addImgBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
-  document.getElementById('fileInput').addEventListener('change',function(){
-    if(this.files.length)handleFiles(this.files);this.value='';
-  });
-  document.getElementById('importClientFile').addEventListener('change',importClientJSON);
-  document.getElementById('importAllFile').addEventListener('change',importAllJSON);
-  document.getElementById('noteAddBtn').addEventListener('click',addNote);
-  document.getElementById('noteInput').addEventListener('keyup',e=>{if(e.key==='Enter')addNote();});
-  // Close modals on bg click
-  ['clientOverlay','damageOverlay'].forEach(id=>{
-    document.getElementById(id).addEventListener('click',e=>{
-      if(e.target===document.getElementById(id))
-        id==='clientOverlay'?closeClientModal():closeDamageModal();
-    });
-  });
-  // Sync search
-  document.getElementById('sSearch').addEventListener('input',function(){document.getElementById('mSearch').value=this.value;});
-  document.getElementById('mSearch').addEventListener('input',function(){document.getElementById('sSearch').value=this.value;});
-  document.getElementById('sStatus').addEventListener('change',function(){document.getElementById('mStatus').value=this.value;});
-  document.getElementById('mStatus').addEventListener('change',function(){document.getElementById('sStatus').value=this.value;});
+  // Registry: rivi
+  G('tbody').addEventListener('click',e=>{const r=e.target.closest('tr[data-id]');if(r)openEdit(r.dataset.id);});
+  // Notes
+  G('nList').addEventListener('click',e=>{const b=e.target.closest('[data-ni]');if(b){cNotes.splice(+b.dataset.ni,1);renderNotes();}});
+  G('nAdd').addEventListener('click',addNote);
+  G('nInp').addEventListener('keyup',e=>{if(e.key==='Enter')addNote();});
+  // Images
+  G('igrid').addEventListener('click',e=>{const b=e.target.closest('[data-ii]');if(b){cFiles.splice(+b.dataset.ii,1);renderImgs();}});
+  G('aib').addEventListener('click',()=>G('fInp').click());
+  G('fInp').addEventListener('change',function(){if(this.files.length)handleFiles(this.files);this.value='';});
   // Drag & drop
-  const dropZone=document.getElementById('addImgBtn');
-  ['dragenter','dragover'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.add('dragover');}));
-  ['dragleave','drop'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.remove('dragover');}));
-  dropZone.addEventListener('drop',e=>{if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+  const dz=G('aib');
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dov');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('dov');}));
+  dz.addEventListener('drop',e=>{if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+  // Import files
+  G('impRec').addEventListener('change',function(){if(this.files[0])impRec(this.files[0]);});
+  G('impAll').addEventListener('change',function(){if(this.files[0])impAll(this.files[0]);});
+  // Modal: sulje taustasta
+  G('ovRec').addEventListener('click',e=>{if(e.target===G('ovRec'))closeRec();});
+  G('ovCl').addEventListener('click',e=>{if(e.target===G('ovCl'))closeCl();});
+  // Search sync desktop<->mobile (registry)
+  G('sS').addEventListener('input',function(){G('mS').value=this.value;renderT();});
+  G('mS').addEventListener('input',function(){G('sS').value=this.value;renderT();});
+  G('sSt').addEventListener('change',function(){G('mSt').value=this.value;});
+  G('mSt').addEventListener('change',function(){G('sSt').value=this.value;renderT();});
 });
-</script>
-</body>
-</html>
+</script></body></html>
