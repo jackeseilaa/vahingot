@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a4272">
+<!-- v8.1 -->
 <title>Vahinkorekisteri</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -25,12 +26,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(160deg,var(--navy),var(--navy2));z-index:999}
 #login.gone{display:none}
-.lbox{background:var(--white);border-radius:20px;padding:40px 32px;width:90%;max-width:380px;
+.lbox{background:var(--white);border-radius:20px;padding:28px 28px;width:90%;max-width:380px;
   box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
-.lbox h1{color:var(--navy);font-size:22px;margin:10px 0 6px}
-.lbox p{color:var(--text2);font-size:14px;margin-bottom:28px}
-.pin-row{display:flex;gap:12px;justify-content:center;margin-bottom:24px}
-.pbox{width:58px;height:58px;border:2px solid var(--gray3);border-radius:12px;
+.lbox h1{color:var(--navy);font-size:20px;margin:6px 0 4px}
+.lbox p{color:var(--text2);font-size:13px;margin-bottom:20px}
+.pin-row{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
+.pbox{width:52px;height:52px;border:2px solid var(--gray3);border-radius:12px;
   font-size:26px;font-weight:700;text-align:center;color:var(--navy);background:var(--white)}
 .pbox:focus{outline:none;border-color:var(--navy);background:var(--gray1)}
 #perr{color:var(--red);font-size:14px;min-height:20px;margin-bottom:8px}
@@ -196,7 +197,7 @@ td{padding:11px 14px;font-size:14px;vertical-align:middle}
 <!-- LOGIN -->
 <div id="login">
   <div class="lbox">
-    <div style="font-size:42px">🛡️</div>
+    <div style="font-size:32px">🛡️</div>
     <h1>Vahinkorekisteri</h1>
     <p>Vakuutusmeklarin aineistonhallinta<br><small style="color:#aaa">AJarmo Oy | J Sailing Tmi</small></p>
     <div id="perr"></div>
@@ -347,8 +348,8 @@ td{padding:11px 14px;font-size:14px;vertical-align:middle}
     <div class="fg">
       <label>Liitteet & Kuvat</label>
       <div class="igrid" id="imgGrid"></div>
-      <button class="addimgbtn" id="addImgBtn">📁 Lisää kuvia kuvakirjastosta</button>
-      <input type="file" id="fileInput" multiple accept="image/*,application/pdf" style="display:none">
+      <button class="addimgbtn" id="addImgBtn">📁 Lisää tiedostoja (kuvat, PDF, Word, Excel...)</button>
+      <input type="file" id="fileInput" multiple accept="*/*" style="display:none">
     </div>
 
     <div class="mfooter2">
@@ -548,12 +549,25 @@ function addNote(){
 }
 
 /* ── IMAGES (compressed) ── */
+function fileIcon(name){
+  const ext=(name.split('.').pop()||'').toLowerCase();
+  if(['pdf'].includes(ext))return'📄';
+  if(['doc','docx'].includes(ext))return'📝';
+  if(['xls','xlsx'].includes(ext))return'📊';
+  if(['ppt','pptx'].includes(ext))return'📑';
+  if(['txt'].includes(ext))return'📃';
+  if(['zip','rar'].includes(ext))return'🗜️';
+  return'📎';
+}
 function renderImages(){
   document.getElementById('imgGrid').innerHTML=currentFiles.map((f,i)=>
     `<div class="ithumb">
       ${f.data.startsWith('data:image')
         ?`<img src="${f.data}" loading="lazy">`
-        :`<div class="ifile">📄<br><small>${f.name.slice(0,14)}</small></div>`}
+        :`<div class="ifile" style="font-size:28px;flex-direction:column;gap:4px">
+            ${fileIcon(f.name)}
+            <small style="font-size:10px;word-break:break-all;color:#555">${f.name.slice(0,16)}</small>
+          </div>`}
       <button class="idel" data-ii="${i}">✕</button>
     </div>`
   ).join('');
