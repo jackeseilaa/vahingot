@@ -412,7 +412,7 @@ function saveData(){
 }
 
 /* ── HELPERS ── */
-function fi(iso){if(!iso)return'—';const[y,m,d]=iso.split('-');return`${d}.${m}.${y}`;}
+function fi(iso){if(!iso)return'—';if(iso.includes('.')){return iso;}const[y,m,d]=iso.split('-');if(!d||!m||!y)return iso;return`${d}.${m}.${y}`;}
 function badgeClass(s){if(!s)return'b-avoin';return'b-'+s.toLowerCase().replace(/\s/g,'');}
 function badgeLabel(s){return s||'Avoin';}
 
@@ -667,6 +667,12 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws,'Vahingot');
   XLSX.writeFile(wb,`vahingot_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+function toISO(d){
+  if(!d)return'';
+  if(d.includes('-'))return d; // jo ISO-muodossa
+  if(d.includes('.')){const[dd,mm,yy]=d.split('.');return`${yy}-${mm}-${dd}`;}
+  return d;
+}
 function importFromFile(){
   const input=document.getElementById('importFile');
   const file=input.files[0];
@@ -692,7 +698,7 @@ function importFromFile(){
     // Vaihe 4: Normalisoi rakenne (tue vanhoja versioita)
     data=data.map(r=>({
       id:r.id||('IMP-'+Date.now()+Math.random()),
-      date:r.date||r.vahinkopäivä||'',
+      date:toISO(r.date||r.vahinkopäivä||''),
       target:r.target||r.kohde||'',
       type:r.type||r.tyyppi||'Ajoneuvovahinko',
       status:r.status||r.käsittelyn_tila||'',
