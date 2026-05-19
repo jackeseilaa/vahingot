@@ -177,9 +177,10 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 
 .addimgbtn{width:100%;padding:11px;background:var(--gray1);border:2px dashed var(--gray3);
   border-radius:8px;cursor:pointer;color:var(--navy);font-weight:700;font-size:14px;
-  display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+  display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:all .2s}
 .addimgbtn:hover{background:var(--gray2);border-color:var(--navy)}
 .addimgbtn:active{opacity:.85}
+.addimgbtn.dragover{background:var(--navy);color:var(--white);border-color:var(--gold)}
 
 .mfooter2{display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--gray2)}
 .bsave{flex:2;padding:13px;background:var(--green);color:var(--white);
@@ -372,7 +373,7 @@ td{padding:8px 12px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VERSION='8.12', PIN='1234', KEY='vahinkorekisteri_v8';
+const VERSION='8.13', PIN='1234', KEY='vahinkorekisteri_v8';
 let records=[], currentId=null, currentNotes=[], currentFiles=[];
 let sortField='date', sortAsc=false;
 
@@ -833,6 +834,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   document.getElementById('mStatus').addEventListener('change',function(){
     document.getElementById('sStatus').value=this.value;
+  });
+
+  // Drag & Drop
+  const dropZone=document.getElementById('addImgBtn');
+  ['dragenter','dragover'].forEach(evt=>{
+    dropZone.addEventListener(evt,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.add('dragover');});
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropZone.addEventListener(evt,e=>{e.preventDefault();e.stopPropagation();dropZone.classList.remove('dragover');});
+  });
+  dropZone.addEventListener('drop',e=>{
+    if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);
   });
 });
 </script>
