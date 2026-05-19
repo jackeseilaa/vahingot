@@ -476,7 +476,7 @@ function updateStats(){
 /* ── SORT ── */
 function setSort(f){
   if(sortField===f)sortAsc=!sortAsc;
-  else{sortField=f;sortAsc=true;} // Kaikki field sorttaa ensin ascending
+  else{sortField=f;sortAsc=(f==='date'?false:true);} // Kaikki field sorttaa ensin ascending
   renderTable();
 }
 
