@@ -370,7 +370,7 @@ td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VER='9.0',PIN='1234',CK='vahingot_v9_clients',EK='vahingot_v9_exp';
+const VER='9.1',PIN='1234',CK='vahingot_v9_clients',EK='vahingot_v9_exp';
 const G=id=>document.getElementById(id);
 let clients=[],records=[],cid=null,recId=null,cNotes=[],cFiles=[],eCid=null,sf='date',sa=false;
 
@@ -672,14 +672,34 @@ function impAll(file){
   const r=new FileReader();
   r.onload=e=>{
     G('impAll').value='';
-    let data;try{data=JSON.parse(e.target.result);}catch(e){alert('❌ Virheellinen JSON.');return;}
-    if(!data.clients){alert('❌ Virheellinen rakenne.');return;}
-    if(!confirm('Tuodaan '+data.clients.length+' asiakasta. Korvataanko kaikki nykyiset tiedot?'))return;
-    clients=data.clients;saveCls();
-    clients.forEach(c=>{if(data.records?.[c.id])localStorage.setItem(ck(c.id),JSON.stringify(data.records[c.id]));});
-    renderCl();updDash();alert('✅ Tuonti onnistui! '+clients.length+' asiakasta.');
+    let raw;
+    try{raw=JSON.parse(e.target.result);}
+    catch(ex){alert('❌ Tiedosto ei ole kelvollinen JSON.');return;}
+    // Tue sekä v9-muoto {version,clients,records} että v8-muoto [...]
+    let data;
+    if(Array.isArray(raw)){
+      // Vanha v8-muoto - muodosta v9-rakenne
+      const cid2='i'+Date.now()+'x';
+      const nimi=prompt('Vanha varmuuskopio ('+raw.length+' vahinkoa).\nSyötä asiakkaan nimi:','Asiakas 1');
+      if(!nimi)return;
+      data={clients:[{id:cid2,nimi,ytunnus:'',toimiala:'',kontakti:'',puh:'',email:'',notes:''}],records:{[cid2]:raw}};
+    } else if(raw && raw.clients && Array.isArray(raw.clients)){
+      // V9-muoto
+      data=raw;
+    } else {
+      alert('❌ Tiedoston rakenne ei ole tuettua muotoa.');return;
+    }
+    if(!confirm('Tuodaan '+data.clients.length+' asiakasta.\nKorvataanko kaikki nykyiset tiedot?'))return;
+    clients=data.clients; saveCls();
+    data.clients.forEach(c=>{
+      const recs=data.records?.[c.id];
+      if(recs)localStorage.setItem(ck(c.id),JSON.stringify(recs));
+    });
+    renderCl();updDash();
+    alert('✅ Tuonti onnistui!\n'+data.clients.length+' asiakasta · '
+      +data.clients.reduce((s,c)=>{try{return s+(data.records?.[c.id]?.length||0);}catch(e){return s;}},0)+' vahinkoa');
   };
-  r.onerror=()=>{G('impAll').value='';alert('❌ Luku epäonnistui.');};
+  r.onerror=()=>{G('impAll').value='';alert('❌ Tiedostoa ei voitu lukea.');};
   r.readAsText(file,'UTF-8');
 }
 function expXL(){
