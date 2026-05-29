@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Outfit', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       margin: 0;
       background: #f5f5f5;
     }
@@ -19,7 +19,7 @@
       min-height: 100vh;
     }
     h1 {
-      font-family: 'Cormorant Garamond', 'Garamond', serif;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 32px;
       font-weight: 600;
       color: #0a4272;
@@ -36,7 +36,7 @@
       padding: 2.5rem 1.5rem;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s;
       background: rgba(10, 66, 114, 0.02);
     }
     .dropzone:hover {
@@ -57,10 +57,6 @@
       color: #0a4272;
       margin-bottom: 6px;
     }
-    .dropzone-hint {
-      font-size: 13px;
-      color: #999;
-    }
     input[type="file"] {
       display: none;
     }
@@ -75,13 +71,15 @@
       cursor: pointer;
       margin-top: 1rem;
       width: 100%;
-      transition: all 0.2s;
-    }
-    .button:hover {
-      background: #063250;
     }
     .button:active {
-      transform: scale(0.98);
+      opacity: 0.85;
+    }
+    .button.danger {
+      background: #dc3545;
+      margin-top: 0.5rem;
+      font-size: 13px;
+      padding: 10px;
     }
     .status {
       margin-top: 2rem;
@@ -100,50 +98,60 @@
       background: rgba(244, 67, 54, 0.08);
       border-left: 4px solid #F44336;
     }
+    .status.warning {
+      background: rgba(255, 193, 7, 0.08);
+      border-left: 4px solid #FFC107;
+    }
+    .status.info {
+      background: rgba(33, 150, 243, 0.08);
+      border-left: 4px solid #2196F3;
+    }
     .status-title {
       font-weight: 600;
       font-size: 15px;
       margin-bottom: 10px;
     }
-    .status.success .status-title {
-      color: #1B5E20;
-    }
-    .status.error .status-title {
-      color: #B71C1C;
-    }
+    .status.success .status-title { color: #1B5E20; }
+    .status.error .status-title { color: #B71C1C; }
+    .status.warning .status-title { color: #F57F17; }
+    .status.info .status-title { color: #1565C0; }
     .status-message {
       font-size: 13px;
       line-height: 1.6;
-      margin: 0;
       color: #333;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .status.success .status-message {
-      color: #1B5E20;
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 12px 0;
+      overflow: hidden;
     }
-    .status.error .status-message {
-      color: #B71C1C;
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      width: 0%;
+      transition: width 0.3s;
     }
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin: 1rem 0;
+      margin: 12px 0;
     }
     .stat-card {
       background: rgba(10, 66, 114, 0.05);
       padding: 12px;
       border-radius: 8px;
       text-align: center;
-      border: 1px solid rgba(10, 66, 114, 0.1);
     }
     .stat-label {
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
-      margin-bottom: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
     .stat-value {
       font-size: 24px;
@@ -164,100 +172,57 @@
       color: #555;
       line-height: 1.7;
     }
-    .info-box strong {
-      color: #0a4272;
-      display: block;
-      margin-bottom: 8px;
-    }
-    .info-box ol {
-      margin: 8px 0 0;
-      padding-left: 20px;
-    }
-    .info-box li {
-      margin: 4px 0;
-    }
-    .client-list {
-      margin-top: 1rem;
-      font-size: 13px;
-    }
-    .client-item {
-      padding: 8px;
-      background: #f9f9f9;
-      border: 1px solid rgba(10, 66, 114, 0.1);
-      border-radius: 6px;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .client-name {
-      color: #0a4272;
-      font-weight: 500;
-    }
-    .client-count {
-      background: rgba(212, 175, 55, 0.2);
-      color: #d4af37;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .success-note {
-      margin-top: 1rem;
-      padding: 12px;
-      background: rgba(76, 175, 80, 0.1);
+    .warning-box {
+      background: rgba(255, 193, 7, 0.08);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      padding: 1rem;
       border-radius: 8px;
       font-size: 13px;
-      color: #1B5E20;
-      border-left: 3px solid #4CAF50;
-    }
-    .debug-box {
-      background: #f9f9f9;
-      padding: 12px;
-      border-radius: 8px;
-      font-family: 'Monaco', 'Courier New', monospace;
-      font-size: 11px;
-      margin-top: 12px;
-      max-height: 250px;
-      overflow-y: auto;
-      color: #555;
-      border: 1px solid #e0e0e0;
+      color: #F57F17;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Vahinkohallinta</h1>
-    <p class="subtitle">Tuonti-työkalu (Mac · iPad · iPhone)</p>
+    <p class="subtitle">Tuonti-työkalu v2.1 (smart import)</p>
     
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📄</div>
       <div class="dropzone-text">Vedä varmuuskopio tähän</div>
-      <div class="dropzone-hint">tai klikkaa valitaksesi tiedoston</div>
+      <div style="font-size: 12px; color: #999;">tai klikkaa valitaksesi</div>
       <input type="file" id="fileInput" accept=".json" />
     </div>
     
     <button class="button" id="selectBtn">Valitse tiedosto</button>
     
+    <div class="button danger" id="clearBtn" style="display: none;">
+      🗑️ Tyhjennä vanha data ensin
+    </div>
+    
     <div class="divider"></div>
     
     <div class="info-box">
-      <strong>📋 Ohje:</strong>
-      <ol>
-        <li>Lataa backup JSON-tiedostosi</li>
-        <li>Sovellus siirtää datan localStorage:iin</li>
-        <li>Päivitä Vahinkohallinta-sivu (reload)</li>
-        <li>Kaikki vahingot näkyvät takaisin</li>
-      </ol>
+      <strong>📋 Ohje:</strong><br>
+      1. Valitse backup JSON-tiedostosi<br>
+      2. Sovellus siirtää datan localStorage:iin ja IndexedDB:hen<br>
+      3. Päivitä Vahinkohallinta-sivu<br>
+      4. Kaikki vahingot näkyvät takaisin
+    </div>
+    
+    <div class="warning-box" id="storageWarning" style="display: none;">
+      ⚠️ <strong>Selainmuisti täynnä!</strong><br>
+      Klikkaa "Tyhjennä vanha data ensin" -nappia.
     </div>
     
     <div class="status" id="status">
       <div class="status-title" id="statusTitle"></div>
+      <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
       <p class="status-message" id="statusMessage"></p>
       <div class="stats" id="stats"></div>
-      <div class="client-list" id="clientList"></div>
-      <div class="success-note" id="successNote" style="display:none;"></div>
-      <div class="debug-box" id="debugBox" style="display:none;"></div>
     </div>
   </div>
 
@@ -265,50 +230,55 @@
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const selectBtn = document.getElementById('selectBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const status = document.getElementById('status');
     const statusTitle = document.getElementById('statusTitle');
     const statusMessage = document.getElementById('statusMessage');
     const stats = document.getElementById('stats');
-    const clientList = document.getElementById('clientList');
-    const successNote = document.getElementById('successNote');
-    const debugBox = document.getElementById('debugBox');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const storageWarning = document.getElementById('storageWarning');
 
     selectBtn.addEventListener('click', () => fileInput.click());
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropzone.addEventListener(eventName, preventDefaults, false);
+    
+    clearBtn.addEventListener('click', () => {
+      if (confirm('🗑️ Poistetaan KAIKKI tiedot.\n\nJatka?')) {
+        clearAllData();
+      }
     });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => 
+      dropzone.addEventListener(e, preventDefaults, false)
+    );
 
     function preventDefaults(e) {
       e.preventDefault();
       e.stopPropagation();
     }
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropzone.addEventListener(eventName, () => dropzone.classList.add('active'), false);
+    ['dragenter', 'dragover'].forEach(e =>
+      dropzone.addEventListener(e, () => dropzone.classList.add('active'), false)
+    );
+
+    ['dragleave', 'drop'].forEach(e =>
+      dropzone.addEventListener(e, () => dropzone.classList.remove('active'), false)
+    );
+
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+      }
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropzone.addEventListener(eventName, () => dropzone.classList.remove('active'), false);
-    });
-
-    dropzone.addEventListener('drop', handleDrop, false);
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
         handleFile(e.target.files[0]);
       }
     });
 
-    function handleDrop(e) {
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        handleFile(files[0]);
-      }
-    }
-
     function handleFile(file) {
       if (!file.name.endsWith('.json')) {
-        showError('⚠️ Väärä tiedostotyyppi', 'Valitse JSON-tiedosto (.json)');
+        showError('❌ Väärä tiedostotyyppi', 'Valitse JSON-tiedosto');
         return;
       }
       
@@ -325,163 +295,177 @@
     }
 
     function validateAndImport(data) {
-      const debug = [];
-      
       try {
-        debug.push('=== TUONTI ALKAA ===\n');
-        
-        if (!data) {
-          throw new Error('Tiedosto on tyhjä');
-        }
-        
-        debug.push(`Pääavaimet: ${Object.keys(data).join(', ')}\n`);
-        
-        if (!Array.isArray(data.clients)) {
-          throw new Error(`clients pitää olla array, saatiin ${typeof data.clients}`);
-        }
-        debug.push(`✓ Asiakkaat: ${data.clients.length}`);
-        
-        if (!data.records || typeof data.records !== 'object') {
-          throw new Error(`records pitää olla objekti`);
-        }
-        debug.push(`✓ Records-objekti: ${Object.keys(data.records).length} clientId:tä\n`);
-        
-        if (data.clients.length === 0) {
+        // Validointi
+        if (!data.clients || !Array.isArray(data.clients)) {
           throw new Error('Tiedostossa ei ole asiakkaita');
         }
-        
-        let totalRecords = 0;
-        const clientStats = [];
-        const clientNameMap = {};
-        
-        // Kerää info
-        data.clients.forEach((client, idx) => {
-          const cid = client.id;
-          const records = data.records[cid] || [];
-          clientNameMap[cid] = client.nimi;
-          
-          debug.push(`${idx + 1}. ${client.nimi}: ${records.length} vahinkoa`);
-          
-          totalRecords += records.length;
-          clientStats.push({
-            id: cid,
-            name: client.nimi || `Client ${idx}`,
-            count: records.length
-          });
-        });
-        
-        debug.push(`\nYhteensä: ${totalRecords} vahinkoa\n`);
-        debug.push('=== TALLENNUS ALKAA ===\n');
-        
-        // Tuonti - TÄRKEÄ: tallenna asiakkaat ENSIN, sitten vahingot pienemmissä palasissa
-        debug.push('1. Tallennetaan asiakkaat...');
+        if (!data.records || typeof data.records !== 'object') {
+          throw new Error('Tiedostossa ei ole vahinkoja');
+        }
+        if (data.clients.length === 0) {
+          throw new Error('Tiedostossa on 0 asiakasta');
+        }
+
+        // Tarkista storagen tila
         try {
-          const key = 'vahinkohallinta_v9_clients';
-          localStorage.setItem(key, JSON.stringify(data.clients));
-          debug.push(`   ✓ Asiakkaat tallennettu\n`);
-        } catch (err) {
-          throw new Error(`Asiakkaiden tallennus epäonnistui: ${err.message}`);
+          localStorage.setItem('_test', 'test');
+          localStorage.removeItem('_test');
+        } catch (e) {
+          showWarning('⚠️ Selainmuisti täynnä', 
+            'localStorage on täynnä.\n\nKlikkaa "Tyhjennä vanha data ensin" ja yritä uudelleen.',
+            data);
+          return;
         }
-        
-        debug.push('2. Tallennetaan vahingot per asiakas:\n');
-        
-        let successCount = 0;
-        for (const client of data.clients) {
-          const cid = client.id;
-          const records = data.records[cid] || [];
-          
-          if (records.length === 0) {
-            debug.push(`   ○ ${client.nimi}: ei vahinkoja`);
-            continue;
-          }
-          
-          try {
-            const key = `vahingot_v9_${cid}`;
-            localStorage.setItem(key, JSON.stringify(records));
-            debug.push(`   ✓ ${client.nimi}: ${records.length} vahinko`);
-            successCount++;
-          } catch (err) {
-            debug.push(`   ✗ ${client.nimi}: VIRHE - ${err.message}`);
-            // Jatka muille, älä peruuta
-          }
-        }
-        
-        debug.push(`\n=== TUONTI VALMIS ===`);
-        debug.push(`${successCount}/${data.clients.length} asiakasta tallennettu`);
-        debug.push(`Yhteensä: ${totalRecords} vahinkoa\n`);
-        
-        // Verifiointi
-        debug.push('=== VERIFIOINTI ===');
-        let verifyCount = 0;
-        for (const client of data.clients) {
-          const key = `vahingot_v9_${client.id}`;
-          const stored = localStorage.getItem(key);
-          const count = stored ? JSON.parse(stored).length : 0;
-          debug.push(`${client.nimi}: ${count} vahinko`);
-          verifyCount += count;
-        }
-        debug.push(`\nYhteensä tarkistettu: ${verifyCount} vahinkoa`);
-        
-        showSuccess(data.clients.length, totalRecords, clientStats, debug.join('\n'));
-        
+
+        // Aloita tuonti
+        doImport(data);
+
       } catch (err) {
-        debug.push(`\n❌ VIRHE: ${err.message}`);
-        showError('Tuonti epäonnistui', err.message, debug.join('\n'));
+        showError('❌ Validointi epäonnistui', err.message);
       }
     }
 
-    function showSuccess(clientCount, recordCount, clientStats, debugText) {
-      status.classList.add('show', 'success');
+    function doImport(data) {
+      status.classList.add('show', 'info');
+      statusTitle.textContent = '⏳ Tuonti käynnissä...';
+      statusMessage.textContent = 'Siirretään asiakkaita ja vahinkoja...';
+      progressBar.style.display = 'block';
+
+      setTimeout(() => {
+        try {
+          let totalRecs = 0;
+
+          // 1. Tallenna asiakkaat
+          progressFill.style.width = '20%';
+          localStorage.setItem('vahinkohallinta_v9_clients', JSON.stringify(data.clients));
+
+          // 2. Tallenna vahingot per asiakas
+          for (let i = 0; i < data.clients.length; i++) {
+            const client = data.clients[i];
+            const records = data.records[client.id] || [];
+            
+            if (records.length > 0) {
+              localStorage.setItem(`vahingot_v9_${client.id}`, JSON.stringify(records));
+              totalRecs += records.length;
+            }
+            
+            progressFill.style.width = (20 + (i + 1) / data.clients.length * 60) + '%';
+          }
+
+          // 3. Verifiointi
+          progressFill.style.width = '90%';
+          let verifyCount = 0;
+          const clientStats = [];
+          
+          for (const client of data.clients) {
+            const stored = localStorage.getItem(`vahingot_v9_${client.id}`);
+            const count = stored ? JSON.parse(stored).length : 0;
+            verifyCount += count;
+            if (count > 0) {
+              clientStats.push({
+                name: client.nimi,
+                count: count
+              });
+            }
+          }
+
+          progressFill.style.width = '100%';
+
+          // Näytä tulos
+          setTimeout(() => {
+            showSuccess(data.clients.length, verifyCount, clientStats);
+          }, 300);
+
+        } catch (err) {
+          showError('❌ Tuonti epäonnistui', err.message);
+        }
+      }, 100);
+    }
+
+    function clearAllData() {
+      showWarning('⏳ Tietojen poistaminen...', 'Poistetaan vanhaa dataa...');
+      
+      setTimeout(() => {
+        try {
+          // Poista kaikki vahinkohallinta-avaimet
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('vahinkohallinta') || key.includes('vahingot'))) {
+              keys.push(key);
+            }
+          }
+          
+          keys.forEach(key => localStorage.removeItem(key));
+          
+          // Poista IndexedDB:stä
+          if (window.indexedDB) {
+            const dbs = ['vahinkohallinta', 'vahinkorekisteri'];
+            dbs.forEach(db => {
+              const req = indexedDB.deleteDatabase(db);
+            });
+          }
+          
+          showSuccess(0, 0, [], 'Vanha data poistettu. Voit nyt tuoda uuden varmuuskopion.');
+          clearBtn.style.display = 'none';
+          storageWarning.style.display = 'none';
+          
+        } catch (err) {
+          showError('❌ Poistaminen epäonnistui', err.message);
+        }
+      }, 300);
+    }
+
+    function showSuccess(clientCount, recordCount, clientStats, message) {
+      status.classList.remove('info', 'error', 'warning');
+      status.classList.add('success');
+      status.classList.add('show');
+      
       statusTitle.textContent = '✅ Tuonti onnistui!';
       
-      let message = `${clientCount} asiakasta tuotu\n${recordCount} vahinkoraporttia siirretty`;
-      statusMessage.textContent = message;
-      
-      stats.innerHTML = `
-        <div class="stat-card">
-          <div class="stat-label">Asiakkaat</div>
-          <div class="stat-value">${clientCount}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Vahingot</div>
-          <div class="stat-value">${recordCount}</div>
-        </div>
-      `;
-      
-      const listHTML = clientStats
-        .filter(s => s.count > 0)
-        .map(stat => `
-          <div class="client-item">
-            <span class="client-name">${stat.name}</span>
-            <span class="client-count">${stat.count}</span>
-          </div>
-        `)
-        .join('');
-      
-      if (listHTML) {
-        clientList.innerHTML = listHTML;
+      if (message) {
+        statusMessage.textContent = message;
+      } else {
+        statusMessage.textContent = `${clientCount} asiakasta\n${recordCount} vahinkoa siirretty\n\n🔄 Päivitä Vahinkohallinta-sivu nähdäksesi kaikki tiedot.`;
       }
       
-      successNote.textContent = '🔄 Päivitä nyt Vahinkohallinta-sivu selaimessasi nähdäksesi kaikki tiedot.';
-      successNote.style.display = 'block';
+      progressBar.style.display = 'none';
       
-      if (debugText) {
-        debugBox.textContent = debugText;
-        debugBox.style.display = 'block';
+      if (clientStats.length > 0) {
+        stats.innerHTML = clientStats.map(s => `
+          <div class="stat-card">
+            <div class="stat-label">${s.name}</div>
+            <div class="stat-value">${s.count}</div>
+          </div>
+        `).join('');
       }
     }
 
-    function showError(title, message, debugText) {
-      status.classList.add('show', 'error');
+    function showError(title, message) {
+      status.classList.remove('info', 'success', 'warning');
+      status.classList.add('error');
+      status.classList.add('show');
+      
       statusTitle.textContent = title;
       statusMessage.textContent = message;
+      progressBar.style.display = 'none';
       stats.innerHTML = '';
-      clientList.innerHTML = '';
-      successNote.style.display = 'none';
+    }
+
+    function showWarning(title, message, data) {
+      status.classList.remove('info', 'success', 'error');
+      status.classList.add('warning');
+      status.classList.add('show');
       
-      if (debugText) {
-        debugBox.textContent = debugText;
-        debugBox.style.display = 'block';
+      statusTitle.textContent = title;
+      statusMessage.textContent = message;
+      progressBar.style.display = 'none';
+      stats.innerHTML = '';
+      
+      if (data) {
+        clearBtn.style.display = 'block';
+        storageWarning.style.display = 'block';
       }
     }
   </script>
