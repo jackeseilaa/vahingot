@@ -376,7 +376,7 @@
         // Tuonti - TÄRKEÄ: tallenna asiakkaat ENSIN, sitten vahingot pienemmissä palasissa
         debug.push('1. Tallennetaan asiakkaat...');
         try {
-          const key = 'vahinkohallinta_clients_v9';
+          const key = 'vahinkohallinta_v9_clients';
           localStorage.setItem(key, JSON.stringify(data.clients));
           debug.push(`   ✓ Asiakkaat tallennettu\n`);
         } catch (err) {
@@ -396,7 +396,7 @@
           }
           
           try {
-            const key = `vahinkohallinta_records_${cid}`;
+            const key = `vahingot_v9_${cid}`;
             localStorage.setItem(key, JSON.stringify(records));
             debug.push(`   ✓ ${client.nimi}: ${records.length} vahinko`);
             successCount++;
@@ -414,7 +414,7 @@
         debug.push('=== VERIFIOINTI ===');
         let verifyCount = 0;
         for (const client of data.clients) {
-          const key = `vahinkohallinta_records_${client.id}`;
+          const key = `vahingot_v9_${client.id}`;
           const stored = localStorage.getItem(key);
           const count = stored ? JSON.parse(stored).length : 0;
           debug.push(`${client.nimi}: ${count} vahinko`);
