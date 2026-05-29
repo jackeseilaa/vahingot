@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vahinkohallinta - iCloud Sync</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      padding: 2rem 1.5rem;
+      margin: 0 auto;
+      background: white;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .section h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 1rem;
+    }
+    .button {
+      background: #0a4272;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .button:active {
+      opacity: 0.85;
+    }
+    .button.secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .info-box {
+      background: rgba(10, 66, 114, 0.04);
+      border: 1px solid rgba(10, 66, 114, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+      margin-top: 1rem;
+    }
+    .success {
+      background: rgba(76, 175, 80, 0.08);
+      border-left: 4px solid #4CAF50;
+      color: #1B5E20;
+    }
+    .warning {
+      background: rgba(255, 193, 7, 0.08);
+      border-left: 4px solid #FFC107;
+      color: #F57F17;
+    }
+    .steps {
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .steps strong {
+      color: #0a4272;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      background: rgba(76, 175, 80, 0.08);
+      border-left: 4px solid #4CAF50;
+      color: #1B5E20;
+      font-size: 13px;
+    }
+    .status.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Vahinkohallinta</h1>
+    <p class="subtitle">iCloud & Cloud Sync</p>
+    
+    <!-- EXPORT -->
+    <div class="section">
+      <h2>☁️ Vie iCloud:iin (Backup)</h2>
+      <p style="font-size: 13px; color: #666; margin: 0 0 1rem;">Vie kaikki tiedot iCloud Driveen tai muuhun pilvitallennukseen.</p>
+      <button class="button" id="exportBtn">📤 Vie varmuuskopio</button>
+      <div class="info-box steps">
+        <strong>Ohjeet:</strong><br>
+        1. Klikkaa "Vie varmuuskopio"<br>
+        2. Tiedosto ladataan: <code>vahinkohallinta_backup_PPKK.json</code><br>
+        3. Avaa <strong>Files-app</strong><br>
+        4. Vedä tiedosto → <strong>iCloud Drive / Vahinkohallinta</strong><br>
+        5. Nyt synkassa kaikilla laitteillasi! ✓
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div class="section">
+      <h2>📥 Tuo iCloud:sta (Palauta)</h2>
+      <p style="font-size: 13px; color: #666; margin: 0 0 1rem;">Palauta tiedot joista laitteesta tahansa.</p>
+      <button class="button" id="importBtn">📥 Tuo varmuuskopio</button>
+      <input type="file" id="fileInput" accept=".json" />
+      <div class="info-box steps">
+        <strong>Ohjeet:</strong><br>
+        1. Avaa <strong>Files-app</strong><br>
+        2. Etsi <code>vahinkohallinta_backup_PPKK.json</code><br>
+        3. <strong>Jaa → Tämä sivu</strong> (tai vedä tiedosto)<br>
+        4. Tuonti onnistuu automaattisesti ✓
+      </div>
+    </div>
+
+    <!-- MANUAALINEN SYNKKAUS -->
+    <div class="section">
+      <h2>🔄 Manuaalinen Sync</h2>
+      <p style="font-size: 13px; color: #666; margin: 0 0 1rem;">Synkronoi kahden laitteen välillä.</p>
+      <button class="button" id="shareBtn">📮 Jaa toiselle laitteelle</button>
+      <div class="info-box steps">
+        <strong>Esim. Mac → iPad:</strong><br>
+        1. <strong>Mac:</strong> Klikkaa "Vie varmuuskopio"<br>
+        2. Lähetä tiedosto esim. sähköpostiin<br>
+        3. <strong>iPad:</strong> Lataa sähköpostista<br>
+        4. Klikkaa "Tuo varmuuskopio"<br>
+        5. ✓ iPad:lla kaikki Mac:in data!
+      </div>
+    </div>
+
+    <!-- AUTOMAATTINEN SYNC (TULEVAISUUS) -->
+    <div class="section">
+      <div class="info-box warning">
+        <strong>🚀 Tulossa:</strong> Automaattinen synkkaus iCloud:iin (ei manuaalista vientia tarvita)<br><br>
+        Nyt: Vie/tuo manuaalisesti<br>
+        Tulevaisuus: Auto-sync taustalla
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+
+    // VIE
+    exportBtn.addEventListener('click', () => {
+      const clientsJson = localStorage.getItem('vahinkohallinta_v9_clients');
+      const clients = clientsJson ? JSON.parse(clientsJson) : [];
+      
+      const records = {};
+      clients.forEach(c => {
+        const recJson = localStorage.getItem(`vahingot_v9_${c.id}`);
+        records[c.id] = recJson ? JSON.parse(recJson) : [];
+      });
+
+      const data = {
+        version: '9.3',
+        exported: new Date().toISOString(),
+        clients,
+        records
+      };
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vahinkohallinta_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showStatus(`✅ Varmuuskopio viety (${clients.length} asiakasta, ${Object.values(records).reduce((s, r) => s + r.length, 0)} vahinkoa)`);
+    });
+
+    // TUO
+    importBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length === 0) return;
+      
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          
+          if (!data.clients || !data.records) {
+            throw new Error('Virheellinen backup-tiedosto');
+          }
+
+          if (!confirm(`Tuodaan ${data.clients.length} asiakasta ja ${Object.values(data.records).reduce((s, r) => s + r.length, 0)} vahinkoa.\n\nKorvataanko nykyiset tiedot?`)) {
+            return;
+          }
+
+          localStorage.setItem('vahinkohallinta_v9_clients', JSON.stringify(data.clients));
+          data.clients.forEach(c => {
+            if (data.records[c.id]) {
+              localStorage.setItem(`vahingot_v9_${c.id}`, JSON.stringify(data.records[c.id]));
+            }
+          });
+
+          showStatus(`✅ Tuonti onnistui! ${data.clients.length} asiakasta tuotu.\n\n🔄 Päivitä Vahinkohallinta-sivu`);
+          fileInput.value = '';
+        } catch (err) {
+          showStatus(`❌ Virhe: ${err.message}`, true);
+        }
+      };
+      reader.readAsText(e.target.files[0]);
+    });
+
+    // JAA
+    shareBtn.addEventListener('click', () => {
+      const clientsJson = localStorage.getItem('vahinkohallinta_v9_clients');
+      const clients = clientsJson ? JSON.parse(clientsJson) : [];
+      
+      const records = {};
+      clients.forEach(c => {
+        const recJson = localStorage.getItem(`vahingot_v9_${c.id}`);
+        records[c.id] = recJson ? JSON.parse(recJson) : [];
+      });
+
+      const data = {
+        version: '9.3',
+        exported: new Date().toISOString(),
+        clients,
+        records
+      };
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vahinkohallinta_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showStatus(`✅ Tiedosto ladattu. Jaa se toiselle laitteelle sähköpostilla tai AirDrop:lla!`);
+    });
+
+    function showStatus(msg, isError = false) {
+      status.textContent = msg;
+      status.className = 'status show' + (isError ? ' error' : ' success');
+      setTimeout(() => status.classList.remove('show'), 5000);
+    }
+  </script>
+</body>
+</html>

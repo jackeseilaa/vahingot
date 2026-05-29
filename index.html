@@ -373,7 +373,7 @@ td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VER='9.3',PIN='1234',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
+const VER='9.4',PIN='1234',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
 const G=id=>document.getElementById(id);
 let clients=[],records=[],cid=null,recId=null,cNotes=[],cFiles=[],eCid=null,sf='date',sa=false;
 
@@ -713,8 +713,53 @@ function expXL(){
   XLSX.writeFile(wb,'vahingot_'+(cl?.nimi||'asiakas')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-// AUTO-SAVE SYSTEM
-let saveTimer=null;let saveStatus=null;
+// INDEXEDDB - KUVAT
+let db=null;
+function initDB(){
+  const req=indexedDB.open('vahinkohallinta',1);
+  req.onupgradeneeded=e=>{
+    const d=e.target.result;
+    if(!d.objectStoreNames.contains('images')){
+      d.createObjectStore('images',{keyPath:'id'});
+    }
+  };
+  req.onsuccess=e=>db=e.target.result;
+  req.onerror=e=>console.log('DB init failed');
+}
+
+function saveImageToDB(imgData,filename){
+  if(!db)return Promise.reject('DB not ready');
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('images','readwrite');
+    const store=tx.objectStore('images');
+    const id='img_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    store.put({id,data:imgData,name:filename,date:new Date().toISOString()});
+    tx.oncomplete=()=>res(id);
+    tx.onerror=()=>rej(tx.error);
+  });
+}
+
+function getImageFromDB(id){
+  if(!db)return Promise.reject('DB not ready');
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('images','readonly');
+    const store=tx.objectStore('images');
+    const req=store.get(id);
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  });
+}
+
+function deleteImageFromDB(id){
+  if(!db)return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('images','readwrite');
+    const store=tx.objectStore('images');
+    tx.oncomplete=()=>res();
+    tx.onerror=()=>rej();
+    store.delete(id);
+  });
+}
 function showSaveStatus(){
   if(!saveStatus){
     const s=document.createElement('div');
