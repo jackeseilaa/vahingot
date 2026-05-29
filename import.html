@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vahinkohallinta - Tuonti-työkalu</title>
+  <title>Vahinkohallinta - Tuonti</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -24,7 +24,6 @@
       font-weight: 600;
       color: #0a4272;
       margin: 0 0 0.5rem;
-      letter-spacing: 0.5px;
     }
     .subtitle {
       font-size: 14px;
@@ -47,7 +46,6 @@
     .dropzone.active {
       border-color: #d4af37;
       background: rgba(212, 175, 55, 0.12);
-      transform: scale(1.01);
     }
     .dropzone-icon {
       font-size: 40px;
@@ -102,10 +100,6 @@
       background: rgba(244, 67, 54, 0.08);
       border-left: 4px solid #F44336;
     }
-    .status.warning {
-      background: rgba(255, 193, 7, 0.08);
-      border-left: 4px solid #FFC107;
-    }
     .status-title {
       font-weight: 600;
       font-size: 15px;
@@ -117,13 +111,10 @@
     .status.error .status-title {
       color: #B71C1C;
     }
-    .status.warning .status-title {
-      color: #F57F17;
-    }
     .status-message {
       font-size: 13px;
       line-height: 1.6;
-      margin: 0 0 1rem;
+      margin: 0;
       color: #333;
       white-space: pre-wrap;
       word-break: break-word;
@@ -185,41 +176,13 @@
     .info-box li {
       margin: 4px 0;
     }
-    .debug-info {
-      background: #f9f9f9;
-      padding: 12px;
-      border-radius: 8px;
-      font-family: 'Monaco', 'Courier New', monospace;
-      font-size: 11px;
-      margin-top: 12px;
-      max-height: 250px;
-      overflow-y: auto;
-      color: #555;
-      border: 1px solid #e0e0e0;
-      line-height: 1.4;
-    }
-    .debug-title {
-      font-weight: 600;
-      color: #0a4272;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-    .success-note {
-      margin-top: 1rem;
-      padding: 12px;
-      background: rgba(76, 175, 80, 0.1);
-      border-radius: 8px;
-      font-size: 13px;
-      color: #1B5E20;
-      border-left: 3px solid #4CAF50;
-    }
     .client-list {
       margin-top: 1rem;
       font-size: 13px;
     }
     .client-item {
       padding: 8px;
-      background: white;
+      background: #f9f9f9;
       border: 1px solid rgba(10, 66, 114, 0.1);
       border-radius: 6px;
       margin-bottom: 6px;
@@ -239,12 +202,33 @@
       font-size: 12px;
       font-weight: 600;
     }
+    .success-note {
+      margin-top: 1rem;
+      padding: 12px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #1B5E20;
+      border-left: 3px solid #4CAF50;
+    }
+    .debug-box {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 11px;
+      margin-top: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+      color: #555;
+      border: 1px solid #e0e0e0;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Vahinkohallinta</h1>
-    <p class="subtitle">Tuonti-työkalu v2.0 (Mac · iPad · iPhone)</p>
+    <p class="subtitle">Tuonti-työkalu (Mac · iPad · iPhone)</p>
     
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📄</div>
@@ -262,7 +246,7 @@
       <ol>
         <li>Lataa backup JSON-tiedostosi</li>
         <li>Sovellus siirtää datan localStorage:iin</li>
-        <li>Päivitä Vahinkohallinta-sivu selaimessa</li>
+        <li>Päivitä Vahinkohallinta-sivu (reload)</li>
         <li>Kaikki vahingot näkyvät takaisin</li>
       </ol>
     </div>
@@ -273,10 +257,7 @@
       <div class="stats" id="stats"></div>
       <div class="client-list" id="clientList"></div>
       <div class="success-note" id="successNote" style="display:none;"></div>
-      <div class="debug-info" id="debugInfo" style="display:none;">
-        <div class="debug-title">Debug-tiedot:</div>
-        <div id="debugText"></div>
-      </div>
+      <div class="debug-box" id="debugBox" style="display:none;"></div>
     </div>
   </div>
 
@@ -290,8 +271,7 @@
     const stats = document.getElementById('stats');
     const clientList = document.getElementById('clientList');
     const successNote = document.getElementById('successNote');
-    const debugInfo = document.getElementById('debugInfo');
-    const debugText = document.getElementById('debugText');
+    const debugBox = document.getElementById('debugBox');
 
     selectBtn.addEventListener('click', () => fileInput.click());
 
@@ -341,89 +321,112 @@
           showError('❌ JSON-virhe', 'Tiedoston lukeminen epäonnistui:\n' + err.message);
         }
       };
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     }
 
     function validateAndImport(data) {
       const debug = [];
       
       try {
-        debug.push('=== VALIDOINTI ===\n');
-        debug.push('1. Tarkistetaan päärakenne...');
+        debug.push('=== TUONTI ALKAA ===\n');
         
         if (!data) {
           throw new Error('Tiedosto on tyhjä');
         }
         
-        debug.push(`   ✓ Pääavaimet: ${Object.keys(data).join(', ')}`);
+        debug.push(`Pääavaimet: ${Object.keys(data).join(', ')}\n`);
         
-        // Version tarkistus
-        const version = data.version;
-        debug.push(`   ✓ Version: "${version}"`);
-        
-        // Clients
         if (!Array.isArray(data.clients)) {
           throw new Error(`clients pitää olla array, saatiin ${typeof data.clients}`);
         }
-        debug.push(`   ✓ clients on array (${data.clients.length} asiakasta)`);
+        debug.push(`✓ Asiakkaat: ${data.clients.length}`);
         
-        // Records
         if (!data.records || typeof data.records !== 'object') {
-          throw new Error(`records pitää olla objekti, saatiin ${typeof data.records}`);
+          throw new Error(`records pitää olla objekti`);
         }
-        debug.push(`   ✓ records on objekti (${Object.keys(data.records).length} client-ID:tä)`);
+        debug.push(`✓ Records-objekti: ${Object.keys(data.records).length} clientId:tä\n`);
         
-        debug.push('\n2. Tarkistetaan sisältö...');
+        if (data.clients.length === 0) {
+          throw new Error('Tiedostossa ei ole asiakkaita');
+        }
         
         let totalRecords = 0;
         const clientStats = [];
-        const importedIds = new Set();
+        const clientNameMap = {};
         
+        // Kerää info
         data.clients.forEach((client, idx) => {
           const cid = client.id;
           const records = data.records[cid] || [];
+          clientNameMap[cid] = client.nimi;
           
-          debug.push(`   ✓ ${client.nimi || `Client ${idx}`}: ${records.length} vahinko`);
+          debug.push(`${idx + 1}. ${client.nimi}: ${records.length} vahinkoa`);
           
           totalRecords += records.length;
-          importedIds.add(cid);
-          
           clientStats.push({
-            name: client.nimi || `Client ${idx}`,
             id: cid,
+            name: client.nimi || `Client ${idx}`,
             count: records.length
           });
         });
         
-        if (data.clients.length === 0 && totalRecords === 0) {
-          throw new Error('Tiedostossa ei ole asiakkaita eikä vahinkoja');
+        debug.push(`\nYhteensä: ${totalRecords} vahinkoa\n`);
+        debug.push('=== TALLENNUS ALKAA ===\n');
+        
+        // Tuonti - TÄRKEÄ: tallenna asiakkaat ENSIN, sitten vahingot pienemmissä palasissa
+        debug.push('1. Tallennetaan asiakkaat...');
+        try {
+          const key = 'vahinkohallinta_clients_v9';
+          localStorage.setItem(key, JSON.stringify(data.clients));
+          debug.push(`   ✓ Asiakkaat tallennettu\n`);
+        } catch (err) {
+          throw new Error(`Asiakkaiden tallennus epäonnistui: ${err.message}`);
         }
         
-        debug.push(`\n3. Siirretään data localStorage:iin...\n`);
+        debug.push('2. Tallennetaan vahingot per asiakas:\n');
         
         let successCount = 0;
-        data.clients.forEach(client => {
+        for (const client of data.clients) {
           const cid = client.id;
           const records = data.records[cid] || [];
-          const key = `vahingot_v9_${cid}`;
+          
+          if (records.length === 0) {
+            debug.push(`   ○ ${client.nimi}: ei vahinkoja`);
+            continue;
+          }
           
           try {
+            const key = `vahinkohallinta_records_${cid}`;
             localStorage.setItem(key, JSON.stringify(records));
+            debug.push(`   ✓ ${client.nimi}: ${records.length} vahinko`);
             successCount++;
-            debug.push(`   ✓ ${key}`);
           } catch (err) {
-            debug.push(`   ✗ ${key}: ${err.message}`);
-            throw err;
+            debug.push(`   ✗ ${client.nimi}: VIRHE - ${err.message}`);
+            // Jatka muille, älä peruuta
           }
-        });
+        }
         
-        debug.push(`\n✅ Tuonti valmis! ${successCount}/${data.clients.length} asiakasta tallennettu.`);
+        debug.push(`\n=== TUONTI VALMIS ===`);
+        debug.push(`${successCount}/${data.clients.length} asiakasta tallennettu`);
+        debug.push(`Yhteensä: ${totalRecords} vahinkoa\n`);
+        
+        // Verifiointi
+        debug.push('=== VERIFIOINTI ===');
+        let verifyCount = 0;
+        for (const client of data.clients) {
+          const key = `vahinkohallinta_records_${client.id}`;
+          const stored = localStorage.getItem(key);
+          const count = stored ? JSON.parse(stored).length : 0;
+          debug.push(`${client.nimi}: ${count} vahinko`);
+          verifyCount += count;
+        }
+        debug.push(`\nYhteensä tarkistettu: ${verifyCount} vahinkoa`);
         
         showSuccess(data.clients.length, totalRecords, clientStats, debug.join('\n'));
         
       } catch (err) {
         debug.push(`\n❌ VIRHE: ${err.message}`);
-        showError('Validointi epäonnistui', err.message, debug.join('\n'));
+        showError('Tuonti epäonnistui', err.message, debug.join('\n'));
       }
     }
 
@@ -445,13 +448,12 @@
         </div>
       `;
       
-      // Client lista
       const listHTML = clientStats
-        .filter(s => s.count > 0 || clientCount === 1)
+        .filter(s => s.count > 0)
         .map(stat => `
           <div class="client-item">
             <span class="client-name">${stat.name}</span>
-            <span class="client-count">${stat.count} vahinko</span>
+            <span class="client-count">${stat.count}</span>
           </div>
         `)
         .join('');
@@ -460,14 +462,12 @@
         clientList.innerHTML = listHTML;
       }
       
-      // Success note
       successNote.textContent = '🔄 Päivitä nyt Vahinkohallinta-sivu selaimessasi nähdäksesi kaikki tiedot.';
       successNote.style.display = 'block';
       
-      // Debug
       if (debugText) {
-        debugText.textContent = debugText;
-        debugInfo.style.display = 'block';
+        debugBox.textContent = debugText;
+        debugBox.style.display = 'block';
       }
     }
 
@@ -480,8 +480,8 @@
       successNote.style.display = 'none';
       
       if (debugText) {
-        debugText.textContent = debugText;
-        debugInfo.style.display = 'block';
+        debugBox.textContent = debugText;
+        debugBox.style.display = 'block';
       }
     }
   </script>
