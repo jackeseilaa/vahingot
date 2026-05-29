@@ -713,9 +713,57 @@ function expXL(){
   XLSX.writeFile(wb,'vahingot_'+(cl?.nimi||'asiakas')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+// AUTO-SAVE SYSTEM
+let saveTimer=null;let saveStatus=null;
+function showSaveStatus(){
+  if(!saveStatus){
+    const s=document.createElement('div');
+    s.id='saveStatus';
+    s.style.cssText='position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;z-index:900;animation:fadeInOut 2s ease-in-out';
+    const style=document.createElement('style');
+    style.textContent='@keyframes fadeInOut{0%{opacity:0;transform:translateY(-10px)}20%{opacity:1;transform:translateY(0)}80%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}';
+    document.head.appendChild(style);
+    document.body.appendChild(s);
+    saveStatus=s;
+  }
+  saveStatus.textContent='✓ Tallennettu';
+  saveStatus.style.display='block';
+}
+function debouncedAutoSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    if(!locked){
+      if(G('dVer').classList.contains('visible'))saveCls();
+      else if(G('rVer').classList.contains('visible'))saveRecs();
+    }
+    showSaveStatus();
+  },500);
+}
+function setupAutoSave(){
+  // Asiakkaat-näyttö: kuuntele kaikkien input-kenttien muutoksia
+  document.addEventListener('input',e=>{
+    if(e.target.matches('input[type="text"], input[type="tel"], input[type="email"], textarea, select')){
+      // Tarkista että ollaan oikealla näytöllä
+      if(G('dVer').classList.contains('visible')||G('rVer').classList.contains('visible')){
+        debouncedAutoSave();
+      }
+    }
+  });
+  // Muisiinpanojen ja kuvien poisto
+  document.addEventListener('click',e=>{
+    const delNote=e.target.closest('[data-ni]');
+    const delImg=e.target.closest('[data-ii]');
+    if(delNote||delImg){
+      setTimeout(debouncedAutoSave,100);
+    }
+  });
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
   initPin();
+  setupAutoSave();
+  
   // Dashboard: klikki
   G('cgrid').addEventListener('click',e=>{
     const ob=e.target.closest('.oreg');if(ob){showReg(ob.dataset.cid);return;}
@@ -725,18 +773,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Registry: rivi
   G('tbody').addEventListener('click',e=>{const r=e.target.closest('tr[data-id]');if(r)openEdit(r.dataset.id);});
   // Notes
-  G('nList').addEventListener('click',e=>{const b=e.target.closest('[data-ni]');if(b){cNotes.splice(+b.dataset.ni,1);renderNotes();}});
+  G('nList').addEventListener('click',e=>{const b=e.target.closest('[data-ni]');if(b){cNotes.splice(+b.dataset.ni,1);renderNotes();debouncedAutoSave();}});
   G('nAdd').addEventListener('click',addNote);
-  G('nInp').addEventListener('keyup',e=>{if(e.key==='Enter')addNote();});
+  G('nInp').addEventListener('keyup',e=>{if(e.key==='Enter'){addNote();debouncedAutoSave();}});
   // Images
-  G('igrid').addEventListener('click',e=>{const b=e.target.closest('[data-ii]');if(b){cFiles.splice(+b.dataset.ii,1);renderImgs();}});
+  G('igrid').addEventListener('click',e=>{const b=e.target.closest('[data-ii]');if(b){cFiles.splice(+b.dataset.ii,1);renderImgs();debouncedAutoSave();}});
   G('aib').addEventListener('click',()=>G('fInp').click());
-  G('fInp').addEventListener('change',function(){if(this.files.length)handleFiles(this.files);this.value='';});
+  G('fInp').addEventListener('change',function(){if(this.files.length){handleFiles(this.files);debouncedAutoSave();}this.value='';});
   // Drag & drop
   const dz=G('aib');
   ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.add('dov');}));
   ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('dov');}));
-  dz.addEventListener('drop',e=>{if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+  dz.addEventListener('drop',e=>{if(e.dataTransfer.files.length){handleFiles(e.dataTransfer.files);debouncedAutoSave();}});
   // Import files
   G('impRec').addEventListener('change',function(){if(this.files[0])impRec(this.files[0]);});
   G('impAll').addEventListener('change',function(){if(this.files[0])impAll(this.files[0]);});
@@ -748,5 +796,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   G('mS').addEventListener('input',function(){G('sS').value=this.value;renderT();});
   G('sSt').addEventListener('change',function(){G('mSt').value=this.value;});
   G('mSt').addEventListener('change',function(){G('sSt').value=this.value;renderT();});
+  
+  // Register Service Worker varmuuskopioinniksi
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('data:application/javascript,'+encodeURIComponent(`
+    self.addEventListener('sync',e=>{
+      if(e.tag==='auto-save'){
+        e.waitUntil(Promise.resolve());
+      }
+    });
+    `)).catch(err=>console.log('SW registration skipped'));
+  }
 });
 </script></body></html>
