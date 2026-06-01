@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vahinkohallinta - Vienti (CSV)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      padding: 2rem 1.5rem;
+      margin: 0 auto;
+      background: white;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .card:hover {
+      border-color: #0a4272;
+      box-shadow: 0 4px 12px rgba(10, 66, 114, 0.1);
+      transform: translateY(-2px);
+    }
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-weight: 600;
+      color: #0a4272;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .card-desc {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.5;
+    }
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 2rem 0;
+    }
+    .info-box {
+      background: rgba(10, 66, 114, 0.04);
+      border: 1px solid rgba(10, 66, 114, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+    }
+    .button {
+      background: #0a4272;
+      color: white;
+      border: none;
+      padding: 13px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    .button:active {
+      opacity: 0.85;
+    }
+    .status {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: 12px;
+      display: none;
+    }
+    .status.show {
+      display: block;
+    }
+    .status.success {
+      background: rgba(76, 175, 80, 0.08);
+      border-left: 4px solid #4CAF50;
+      color: #1B5E20;
+    }
+    .status.error {
+      background: rgba(244, 67, 54, 0.08);
+      border-left: 4px solid #F44336;
+      color: #B71C1C;
+    }
+    .status-text {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Vahinkohallinta</h1>
+    <p class="subtitle">Vienti CSV:na (Excel-yhteensopiva)</p>
+    
+    <div class="grid">
+      <div class="card" id="perAsiakas">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Asiakas</div>
+        <div class="card-desc">Yhden asiakkaan vahingot</div>
+      </div>
+      
+      <div class="card" id="kaikki">
+        <div class="card-icon">📈</div>
+        <div class="card-title">Kaikki</div>
+        <div class="card-desc">Kaikki asiakkaat & vahingot</div>
+      </div>
+      
+      <div class="card" id="yhteenveto">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Yhteenveto</div>
+        <div class="card-desc">Statistiikka & raportit</div>
+      </div>
+      
+      <div class="card" id="vakuutus">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Vakuutus</div>
+        <div class="card-desc">Riskianalyysi & trendit</div>
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="info-box">
+      <strong>📖 Ohje:</strong><br>
+      1. Valitse vientityyppi<br>
+      2. Valitse asiakas (jos tarpeellinen)<br>
+      3. CSV-tiedosto latautuu<br>
+      4. Avaa Excelissä: File → Open → valitse CSV<br>
+      5. Excel kysyy merkistö → UTF-8 OK
+    </div>
+    
+    <div class="status" id="status">
+      <div class="status-text" id="statusText"></div>
+    </div>
+  </div>
+
+  <script>
+    const perAsiakas = document.getElementById('perAsiakas');
+    const kaikki = document.getElementById('kaikki');
+    const yhteenveto = document.getElementById('yhteenveto');
+    const vakuutus = document.getElementById('vakuutus');
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+
+    // Hae data
+    function loadData() {
+      const clientsJson = localStorage.getItem('vahinkohallinta_v9_clients');
+      const clients = clientsJson ? JSON.parse(clientsJson) : [];
+      
+      const records = {};
+      clients.forEach(c => {
+        const recJson = localStorage.getItem(`vahingot_v9_${c.id}`);
+        records[c.id] = recJson ? JSON.parse(recJson) : [];
+      });
+      
+      return { clients, records };
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      return d && m ? `${d}.${m}.${y}` : iso;
+    }
+
+    function toCsv(headers, rows) {
+      // CSV muoto (UTF-8 BOM Excel:lle)
+      const bom = '\uFEFF';
+      const headerLine = headers.map(h => `"${h}"`).join(';');
+      const dataLines = rows.map(row => 
+        row.map(cell => {
+          const str = String(cell || '').replace(/"/g, '""');
+          return `"${str}"`;
+        }).join(';')
+      );
+      return bom + headerLine + '\n' + dataLines.join('\n');
+    }
+
+    function downloadCsv(csv, filename) {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showStatus(`✅ Viety: ${filename}`, false);
+    }
+
+    function showStatus(msg, isError = false) {
+      statusText.textContent = msg;
+      status.className = 'status show' + (isError ? ' error' : ' success');
+      setTimeout(() => status.classList.remove('show'), 5000);
+    }
+
+    // ASIAKASKOHTAINEN
+    perAsiakas.addEventListener('click', () => {
+      const { clients, records } = loadData();
+      if (clients.length === 0) {
+        showStatus('❌ Ei asiakkaita', true);
+        return;
+      }
+
+      const listText = clients.map((c, i) => `${i+1}. ${c.nimi}`).join('\n');
+      const selected = prompt(`Valitse asiakas:\n\n${listText}`);
+      
+      if (!selected) return;
+      const idx = parseInt(selected) - 1;
+      if (idx < 0 || idx >= clients.length) return;
+      
+      const client = clients[idx];
+      const recs = records[client.id] || [];
+      
+      const headers = ['Päivä', 'Kohde', 'Tyyppi', 'Tila', 'Tunnus', 'Muistiinpanot'];
+      const rows = recs.map(r => [
+        formatDate(r.date),
+        r.target || '',
+        r.type || '',
+        r.status || 'Avoin',
+        r.ref || '',
+        (r.notes || []).join('; ')
+      ]);
+
+      const csv = toCsv(headers, rows);
+      downloadCsv(csv, `vahingot_${client.nimi.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+    });
+
+    // KAIKKI ASIAKKAAT
+    kaikki.addEventListener('click', () => {
+      const { clients, records } = loadData();
+      if (clients.length === 0) {
+        showStatus('❌ Ei asiakkaita', true);
+        return;
+      }
+
+      const headers = ['Asiakas', 'Päivä', 'Kohde', 'Tyyppi', 'Tila', 'Tunnus'];
+      const rows = [];
+
+      clients.forEach(client => {
+        const recs = records[client.id] || [];
+        recs.forEach(r => {
+          rows.push([
+            client.nimi,
+            formatDate(r.date),
+            r.target || '',
+            r.type || '',
+            r.status || 'Avoin',
+            r.ref || ''
+          ]);
+        });
+      });
+
+      const csv = toCsv(headers, rows);
+      downloadCsv(csv, `vahinkohallinta_${new Date().toISOString().slice(0, 10)}.csv`);
+    });
+
+    // YHTEENVETO
+    yhteenveto.addEventListener('click', () => {
+      const { clients, records } = loadData();
+      
+      const headers = ['Asiakas', 'Yhteensä', 'Avoineet', 'Suljetut', 'Päätyyppi'];
+      const rows = clients.map(c => {
+        const recs = records[c.id] || [];
+        const types = {};
+        const statuses = {};
+        
+        recs.forEach(r => {
+          types[r.type] = (types[r.type] || 0) + 1;
+          statuses[r.status || 'Avoin'] = (statuses[r.status || 'Avoin'] || 0) + 1;
+        });
+
+        return [
+          c.nimi,
+          recs.length,
+          statuses['Avoin'] || 0,
+          statuses['Suljettu'] || 0,
+          Object.entries(types).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        ];
+      });
+
+      const csv = toCsv(headers, rows);
+      downloadCsv(csv, `yhteenveto_${new Date().toISOString().slice(0, 10)}.csv`);
+    });
+
+    // VAKUUTUS-RAPORTTI
+    vakuutus.addEventListener('click', () => {
+      const { clients, records } = loadData();
+      const now = new Date();
+
+      const headers = ['Asiakas', 'Vahinkotyyppi', 'Yhteensä', 'Viime 30pv', 'Riski-taso', 'Avoineet'];
+      const rows = clients.map(c => {
+        const recs = records[c.id] || [];
+        
+        const byType = {};
+        recs.forEach(r => {
+          if (!byType[r.type]) byType[r.type] = [];
+          byType[r.type].push(r);
+        });
+
+        const last30days = recs.filter(r => {
+          if (!r.date) return false;
+          const rDate = new Date(r.date + 'T00:00:00');
+          return (now - rDate) / (1000 * 60 * 60 * 24) <= 30;
+        });
+
+        const riskLevel = last30days.length > 5 ? 'Korkea' : last30days.length > 2 ? 'Keskitaso' : 'Matala';
+        const openCount = recs.filter(r => !r.status || r.status === 'Avoin').length;
+
+        return [
+          c.nimi,
+          Object.keys(byType).join(', '),
+          recs.length,
+          last30days.length,
+          riskLevel,
+          openCount
+        ];
+      });
+
+      const csv = toCsv(headers, rows);
+      downloadCsv(csv, `vakuutus_raportti_${new Date().toISOString().slice(0, 10)}.csv`);
+    });
+  </script>
+</body>
+</html>
