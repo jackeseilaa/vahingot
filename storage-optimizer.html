@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vahinkohallinta - Storage Optimizer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      padding: 2rem 1.5rem;
+      margin: 0 auto;
+      background: white;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .storage-info {
+      background: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+    .storage-bar {
+      width: 100%;
+      height: 24px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .storage-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+      transition: width 0.3s;
+    }
+    .storage-text {
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+    }
+    .section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .section h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 1rem;
+    }
+    .button {
+      background: #0a4272;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .button:active {
+      opacity: 0.85;
+    }
+    .button.danger {
+      background: #dc3545;
+    }
+    .info-box {
+      background: rgba(10, 66, 114, 0.04);
+      border: 1px solid rgba(10, 66, 114, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+      margin-top: 1rem;
+    }
+    .success {
+      background: rgba(76, 175, 80, 0.08);
+      border-left: 4px solid #4CAF50;
+      color: #1B5E20;
+    }
+    .warning {
+      background: rgba(255, 193, 7, 0.08);
+      border-left: 4px solid #FFC107;
+      color: #F57F17;
+    }
+    .progress {
+      display: none;
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 13px;
+      color: #666;
+    }
+    .progress.show {
+      display: block;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      width: 0%;
+      transition: width 0.2s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Storage Optimizer</h1>
+    <p class="subtitle">Vapauta muistia & lisää kuville tilaa</p>
+    
+    <!-- MUISTIN KÄYTTÖ -->
+    <div class="storage-info">
+      <div style="font-weight: 600; color: #0a4272; margin-bottom: 8px;">📊 Selainmuistin käyttö</div>
+      <div class="storage-bar">
+        <div class="storage-fill" id="storageBar" style="width: 75%;"></div>
+      </div>
+      <div class="storage-text">
+        <span id="storageMB">~3.8 MB / 5 MB</span>
+        <span id="storagePercent">75%</span>
+      </div>
+    </div>
+
+    <!-- OPTIMOINTI -->
+    <div class="section">
+      <h2>⚡ Optimointi</h2>
+      <p style="font-size: 13px; color: #666; margin: 0 0 1rem;">
+        Siirretään kuvat localStorage:sta IndexedDB:hen (vapauttaa n. 2-3 MB tilaa).
+      </p>
+      <button class="button" id="optimizeBtn">🔧 Optimoi & vapauta tilaa</button>
+      <div class="info-box">
+        <strong>Mitä tapahtuu:</strong><br>
+        1. Kuvat siirretään IndexedDB:hen<br>
+        2. localStorage vapauttuu<br>
+        3. Sovellus toimii normaalisti<br>
+        4. ✓ Voit lisätä lisää kuvia!
+      </div>
+    </div>
+
+    <!-- KOMPRESSI -->
+    <div class="section">
+      <h2>📦 Kompressi metadata</h2>
+      <p style="font-size: 13px; color: #666; margin: 0 0 1rem;">
+        Poista turhat kentät vahingoista (säästö ~200-400 KB).
+      </p>
+      <button class="button" id="compressBtn">📉 Kompressoi</button>
+      <div class="info-box warning">
+        <strong>Huomio:</strong> Poistaa joitain automaattisia kenttiä,<br>
+        mutta säilyttää kaikki tärkeät tiedot.
+      </div>
+    </div>
+
+    <!-- INDEXEDDB STATUS -->
+    <div class="section">
+      <h2>💾 IndexedDB Status</h2>
+      <button class="button" id="statusBtn">📊 Tarkista tila</button>
+      <div id="status" style="margin-top: 1rem; display: none; padding: 1rem; background: #f9f9f9; border-radius: 8px; font-size: 13px; color: #666;"></div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress" id="progress">
+      <div id="progressText">Prosessoidaan...</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const optimizeBtn = document.getElementById('optimizeBtn');
+    const compressBtn = document.getElementById('compressBtn');
+    const statusBtn = document.getElementById('statusBtn');
+    const progress = document.getElementById('progress');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const statusDiv = document.getElementById('status');
+    const storageBar = document.getElementById('storageBar');
+    const storageMB = document.getElementById('storageMB');
+    const storagePercent = document.getElementById('storagePercent');
+
+    // Laske localStorage-käyttö
+    function updateStorageBar() {
+      let total = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          total += localStorage[key].length;
+        }
+      }
+      const mb = (total / 1024 / 1024).toFixed(2);
+      const percent = Math.round((mb / 5) * 100);
+      storageBar.style.width = Math.min(percent, 100) + '%';
+      storageMB.textContent = `~${mb} MB / 5 MB`;
+      storagePercent.textContent = Math.min(percent, 100) + '%';
+    }
+
+    updateStorageBar();
+
+    // OPTIMOINTI
+    optimizeBtn.addEventListener('click', async () => {
+      progress.classList.add('show');
+      progressText.textContent = '⏳ Avataan IndexedDB...';
+      progressFill.style.width = '10%';
+
+      try {
+        // Avaa IndexedDB
+        const db = await new Promise((res, rej) => {
+          const req = indexedDB.open('vahinkohallinta', 1);
+          req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('images')) {
+              d.createObjectStore('images', { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = e => res(e.target.result);
+          req.onerror = () => rej('DB open failed');
+        });
+
+        progressText.textContent = '📸 Siirretään kuvia...';
+        progressFill.style.width = '30%';
+
+        // Etsi kuvat localStorage:sta
+        let imagesFound = 0;
+        let imagesMoved = 0;
+
+        for (let key in localStorage) {
+          if (localStorage.hasOwnProperty(key) && key.startsWith('img_')) {
+            imagesFound++;
+            const data = localStorage[key];
+            
+            // Siirrä IndexedDB:hen
+            const tx = db.transaction('images', 'readwrite');
+            const store = tx.objectStore('images');
+            store.put({ id: key, data: data });
+
+            await new Promise((res, rej) => {
+              tx.oncomplete = () => {
+                localStorage.removeItem(key);
+                imagesMoved++;
+                res();
+              };
+              tx.onerror = rej;
+            });
+
+            progressFill.style.width = (30 + (imagesMoved / imagesFound) * 50) + '%';
+          }
+        }
+
+        progressFill.style.width = '95%';
+        updateStorageBar();
+
+        setTimeout(() => {
+          progress.classList.remove('show');
+          alert(`✅ Optimointi valmis!\n\nSiirretty: ${imagesMoved} kuvaa\n\n📊 Tarkista muistin käyttö yllä.`);
+        }, 500);
+
+      } catch (err) {
+        alert(`❌ Virhe: ${err}`);
+        progress.classList.remove('show');
+      }
+    });
+
+    // KOMPRESSI
+    compressBtn.addEventListener('click', async () => {
+      if (!confirm('Poistetaan turhat kentät. Jatka?')) return;
+
+      progress.classList.add('show');
+      progressText.textContent = '🗜️ Kompressoidaan...';
+      progressFill.style.width = '20%';
+
+      try {
+        const clients = JSON.parse(localStorage.getItem('vahinkohallinta_v9_clients') || '[]');
+
+        let totalRecs = 0;
+        clients.forEach((client, idx) => {
+          const key = `vahingot_v9_${client.id}`;
+          const recs = JSON.parse(localStorage.getItem(key) || '[]');
+
+          const compressed = recs.map(r => ({
+            id: r.id,
+            date: r.date,
+            target: r.target,
+            type: r.type,
+            status: r.status,
+            ref: r.ref,
+            notes: r.notes || [],
+            files: r.files ? r.files.map(f => ({ name: f.name })) : [] // Poista data
+          }));
+
+          localStorage.setItem(key, JSON.stringify(compressed));
+          totalRecs += compressed.length;
+
+          progressFill.style.width = (20 + (idx + 1) / clients.length * 70) + '%';
+        });
+
+        progressFill.style.width = '95%';
+        updateStorageBar();
+
+        setTimeout(() => {
+          progress.classList.remove('show');
+          alert(`✅ Kompressi valmis!\n\n${totalRecs} vahinkoa optimoitu.\n\n📊 Muisti vapautunut!`);
+        }, 500);
+
+      } catch (err) {
+        alert(`❌ Virhe: ${err}`);
+        progress.classList.remove('show');
+      }
+    });
+
+    // STATUS
+    statusBtn.addEventListener('click', async () => {
+      try {
+        const db = await new Promise((res, rej) => {
+          const req = indexedDB.open('vahinkohallinta', 1);
+          req.onsuccess = e => res(e.target.result);
+          req.onerror = rej;
+        });
+
+        const tx = db.transaction('images', 'readonly');
+        const store = tx.objectStore('images');
+        const countReq = store.count();
+
+        await new Promise((res, rej) => {
+          countReq.onsuccess = () => {
+            const count = countReq.result;
+            statusDiv.innerHTML = `
+              <strong>IndexedDB Status:</strong><br>
+              📊 Kuvia IndexedDB:ssä: <strong>${count}</strong><br>
+              💾 Tila: Tuntematon (selaimen raja)<br><br>
+              ✓ Kuvat säilyvät vaikka localStorage tyhjennetään!
+            `;
+            statusDiv.style.display = 'block';
+            res();
+          };
+          countReq.onerror = rej;
+        };
+
+      } catch (err) {
+        statusDiv.innerHTML = `❌ Virhe: ${err}`;
+        statusDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

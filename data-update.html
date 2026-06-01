@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vahinkohallinta - Tietojen päivitys</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      padding: 2rem 1.5rem;
+      margin: 0 auto;
+      background: white;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #0a4272;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      color: #0a4272;
+      font-size: 13px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #0a4272;
+      box-shadow: 0 0 0 3px rgba(10, 66, 114, 0.1);
+    }
+    .button {
+      background: #0a4272;
+      color: white;
+      border: none;
+      padding: 13px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .button:active {
+      opacity: 0.85;
+    }
+    .info-box {
+      background: rgba(10, 66, 114, 0.04);
+      border: 1px solid rgba(10, 66, 114, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+      margin-top: 2rem;
+    }
+    .status {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      display: none;
+      background: rgba(76, 175, 80, 0.08);
+      border-left: 4px solid #4CAF50;
+      color: #1B5E20;
+      font-size: 13px;
+    }
+    .status.show {
+      display: block;
+    }
+    .status.error {
+      background: rgba(244, 67, 54, 0.08);
+      border-left: 4px solid #F44336;
+      color: #B71C1C;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tietojen päivitys</h1>
+    <p class="subtitle">Päivitä vahinko ajantasalle</p>
+    
+    <div class="form-group">
+      <label>🎯 Vahinko kohde</label>
+      <select id="target">
+        <option value="">— Valitse vahinko —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>📅 Päivä (PPKK)</label>
+      <input type="text" id="date" placeholder="esim. 25.5.2026">
+    </div>
+
+    <div class="form-group">
+      <label>📋 Tyyppi</label>
+      <select id="type">
+        <option value="">— Valitse —</option>
+        <option value="Ajoneuvovahinko">Ajoneuvovahinko</option>
+        <option value="Liikennevahinko">Liikennevahinko</option>
+        <option value="Omaisuusvahinko">Omaisuusvahinko</option>
+        <option value="Vastuuvahinko">Vastuuvahinko</option>
+        <option value="Muun tyyppiset">Muun tyyppiset</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>✓ Tila</label>
+      <select id="status">
+        <option value="">— Valitse —</option>
+        <option value="Avoin">Avoin</option>
+        <option value="Käsittelyssä">Käsittelyssä</option>
+        <option value="Käsitelly">Käsitelly</option>
+        <option value="Suljettu">Suljettu</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>🔐 Vakuutustunnus</label>
+      <input type="text" id="ref" placeholder="esim. 24-40326-13401-9">
+    </div>
+
+    <div class="form-group">
+      <label>📝 Muistiinpanot</label>
+      <textarea id="notes" placeholder="Lisää muistiinpanoja..."></textarea>
+    </div>
+
+    <button class="button" id="saveBtn">💾 Tallenna päivitys</button>
+
+    <div class="status" id="status"></div>
+
+    <div class="info-box">
+      <strong>📋 Ohje:</strong><br>
+      1. Valitse vahinko kohde-valikosta<br>
+      2. Täytä tiedot<br>
+      3. Klikkaa "Tallenna päivitys"<br>
+      4. Tiedot päivittyvät välittömästi
+    </div>
+  </div>
+
+  <script>
+    const targetSelect = document.getElementById('target');
+    const dateInput = document.getElementById('date');
+    const typeInput = document.getElementById('type');
+    const statusInput = document.getElementById('status');
+    const refInput = document.getElementById('ref');
+    const notesInput = document.getElementById('notes');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusDiv = document.getElementById('status');
+
+    let currentRecordId = null;
+    let currentClientId = null;
+
+    // Hae kaikki vahingot
+    function loadRecords() {
+      targetSelect.innerHTML = '<option value="">— Valitse vahinko —</option>';
+      
+      const clients = JSON.parse(localStorage.getItem('vahinkohallinta_v9_clients') || '[]');
+      const allRecords = [];
+
+      clients.forEach(client => {
+        const key = `vahingot_v9_${client.id}`;
+        const recs = JSON.parse(localStorage.getItem(key) || '[]');
+        
+        recs.forEach(rec => {
+          allRecords.push({
+            id: rec.id,
+            clientId: client.id,
+            target: rec.target,
+            date: rec.date,
+            type: rec.type,
+            status: rec.status,
+            ref: rec.ref,
+            notes: rec.notes
+          });
+        });
+      });
+
+      // Lajittele päivämäärän mukaan (uusimmat ensin)
+      allRecords.sort((a, b) => {
+        const dateA = a.date ? a.date.split('-').reverse().join('') : '00000000';
+        const dateB = b.date ? b.date.split('-').reverse().join('') : '00000000';
+        return dateB.localeCompare(dateA);
+      });
+
+      // Näytä vain viimeiset 50
+      allRecords.slice(0, 50).forEach(rec => {
+        const option = document.createElement('option');
+        option.value = rec.id + '|' + rec.clientId;
+        const dateStr = rec.date ? rec.date : '—';
+        option.textContent = `${dateStr} · ${rec.target} · ${rec.type}`;
+        targetSelect.appendChild(option);
+      });
+    }
+
+    loadRecords();
+
+    // Valitse vahinko
+    targetSelect.addEventListener('change', function() {
+      if (!this.value) {
+        dateInput.value = '';
+        typeInput.value = '';
+        statusInput.value = '';
+        refInput.value = '';
+        notesInput.value = '';
+        currentRecordId = null;
+        return;
+      }
+
+      const [recId, clientId] = this.value.split('|');
+      currentRecordId = recId;
+      currentClientId = clientId;
+
+      const key = `vahingot_v9_${clientId}`;
+      const recs = JSON.parse(localStorage.getItem(key) || '[]');
+      const rec = recs.find(r => r.id === recId);
+
+      if (rec) {
+        // Muunna päivä PPP.KK.VVVV muotoon
+        if (rec.date) {
+          const [y, m, d] = rec.date.split('-');
+          dateInput.value = `${d}.${m}.${y}`;
+        } else {
+          dateInput.value = '';
+        }
+        typeInput.value = rec.type || '';
+        statusInput.value = rec.status || '';
+        refInput.value = rec.ref || '';
+        notesInput.value = (rec.notes || []).join('\n');
+      }
+    });
+
+    // Tallenna
+    saveBtn.addEventListener('click', () => {
+      if (!currentRecordId) {
+        showStatus('❌ Valitse vahinko ensin', true);
+        return;
+      }
+
+      if (!dateInput.value || !typeInput.value || !statusInput.value) {
+        showStatus('❌ Täytä päivä, tyyppi ja tila', true);
+        return;
+      }
+
+      try {
+        // Muunna päivä YYYY-MM-DD muotoon
+        const [d, m, y] = dateInput.value.split('.');
+        const isoDate = `${y}-${m}-${d}`;
+
+        // Hae vahinko
+        const key = `vahingot_v9_${currentClientId}`;
+        const recs = JSON.parse(localStorage.getItem(key) || '[]');
+        const recIdx = recs.findIndex(r => r.id === currentRecordId);
+
+        if (recIdx === -1) {
+          showStatus('❌ Vahinkoa ei löytynyt', true);
+          return;
+        }
+
+        // Päivitä
+        recs[recIdx].date = isoDate;
+        recs[recIdx].type = typeInput.value;
+        recs[recIdx].status = statusInput.value;
+        recs[recIdx].ref = refInput.value;
+        recs[recIdx].notes = notesInput.value 
+          ? notesInput.value.split('\n').filter(n => n.trim()) 
+          : [];
+
+        localStorage.setItem(key, JSON.stringify(recs));
+
+        showStatus(`✅ Päivittetty!\n${recs[recIdx].target} · ${typeInput.value} · ${statusInput.value}`);
+
+      } catch (err) {
+        showStatus(`❌ Virhe: ${err.message}`, true);
+      }
+    });
+
+    function showStatus(msg, isError = false) {
+      statusDiv.textContent = msg;
+      statusDiv.className = 'status show' + (isError ? ' error' : '');
+      setTimeout(() => statusDiv.classList.remove('show'), 4000);
+    }
+  </script>
+</body>
+</html>
