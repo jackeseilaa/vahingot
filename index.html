@@ -367,13 +367,14 @@ td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
     </div>
     <div class="mft">
       <button class="bc" onclick="closeRec()">Peruuta</button>
+      <button class="bd" id="delRecBtn" onclick="delRec()" style="display:none">🗑️ Poista</button>
       <button class="bs" onclick="saveRec()">💾 Tallenna</button>
     </div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VER='9.4',PIN='1234',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
+const VER='9.5',PIN='1234',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
 const G=id=>document.getElementById(id);
 let clients=[],records=[],cid=null,recId=null,cNotes=[],cFiles=[],eCid=null,sf='date',sa=false;
 
@@ -572,6 +573,7 @@ function openNew(){
   G('rT').textContent='Uusi vahinko';
   G('fD').value=new Date().toISOString().split('T')[0];
   G('fTg').value='';G('fTy').value='Ajoneuvovahinko';G('fSt').value='';G('fR').value='';G('nInp').value='';
+  G('delRecBtn').style.display='none';
   renderNotes();renderImgs();G('ovRec').classList.add('on');
   setTimeout(()=>G('fTg').focus(),80);
 }
@@ -580,6 +582,7 @@ function openEdit(id){
   recId=id;cNotes=[...r.notes];cFiles=r.files.map(f=>({...f}));
   G('rT').textContent=r.target;G('fD').value=r.date||'';G('fTg').value=r.target;
   G('fTy').value=r.type;G('fSt').value=r.status;G('fR').value=r.ref||'';G('nInp').value='';
+  G('delRecBtn').style.display='';
   renderNotes();renderImgs();G('ovRec').classList.add('on');
 }
 function closeRec(){G('ovRec').classList.remove('on');recId=null;cNotes=[];cFiles=[];}
@@ -634,6 +637,14 @@ function saveRec(){
   saveRecs();closeRec();renderT();
 }
 function delAll(){if(confirm('Poista KAIKKI tämän asiakkaan vahingot?')){records=[];saveRecs();renderT();}}
+function delRec(){
+  const r=records.find(x=>x.id===recId);
+  if(!r)return;
+  if(confirm('Poistetaanko vahinko "'+r.target+'" ('+fi(r.date)+')?')){
+    records=records.filter(x=>x.id!==recId);
+    saveRecs();closeRec();renderT();
+  }
+}
 
 // EXPORT / IMPORT
 function expRec(){
