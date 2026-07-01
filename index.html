@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#0a4272">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='72' font-size='80'>📋</text></svg>">
-<title>Vahinkohallinta</title>
+<title>Vahinkohallinta v9.6</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -32,11 +32,6 @@ body{height:100%;height:-webkit-fill-available;overflow:hidden;position:fixed;wi
   box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
 .lbox h1{color:var(--navy);font-size:20px;margin:6px 0 4px;font-weight:800}
 .lbox p{color:var(--text2);font-size:13px;margin-bottom:20px}
-.pin-row{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
-.pbox{width:52px;height:52px;border:2px solid var(--g3);border-radius:12px;
-  font-size:24px;font-weight:700;text-align:center;color:var(--navy);background:var(--white)}
-.pbox:focus{outline:none;border-color:var(--navy);background:var(--g1)}
-#perr{color:var(--red);font-size:13px;min-height:18px;margin-bottom:6px}
 .lbtn{width:100%;padding:13px;background:var(--navy);color:var(--white);border:none;
   border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
 .lbtn:active{opacity:.85}
@@ -202,8 +197,7 @@ td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
     <h1>Vahinkohallinta</h1>
     <p>Vakuutusmeklarin aineistonhallinta<br><small style="color:#bbb">AJarmo Oy · J Sailing Tmi</small></p>
     <div id="perr"></div>
-    <div class="pin-row" id="pinRow"></div>
-    <button class="lbtn" onclick="tryLogin()">Kirjaudu sisään</button>
+    <button class="lbtn" id="btnGoogleLogin">Kirjaudu Googlella</button>
   </div>
 </div>
 
@@ -374,7 +368,7 @@ td{padding:8px 11px;font-size:14px;vertical-align:middle;overflow:hidden;text-ov
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const VER='9.5',PIN='1234',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
+const VER='9.6',CK='vahinkohallinta_v9_clients',EK='vahingot_v9_exp';
 const G=id=>document.getElementById(id);
 let clients=[],records=[],cid=null,recId=null,cNotes=[],cFiles=[],eCid=null,sf='date',sa=false;
 
@@ -400,32 +394,43 @@ function saveRecs(){
   catch(e){alert('Selainmuisti täynnä! Vie JSON iCloud:iin ensin.');}
 }
 
-// PIN
-function initPin(){
-  const row=G('pinRow');row.innerHTML='';
-  for(let i=0;i<4;i++){
-    const b=document.createElement('input');
-    b.type='password';b.className='pbox';b.maxLength='1';b.inputMode='numeric';
-    b.addEventListener('keyup',e=>{
-      if(e.key==='Backspace'){b.value='';if(i>0)row.children[i-1].focus();}
-      else if(/[0-9]/.test(e.key)){b.value=e.key;if(i<3)row.children[i+1].focus();else tryLogin();}
-    });
-    row.appendChild(b);
-  }
-  row.children[0].focus();
+// GOOGLE-KIRJAUTUMINEN (korvaa PIN-koodin)
+async function initGoogleAuth(){
+  const {initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+  const fbApp=initializeApp({apiKey:"AIzaSyB7Dp5_5fN0Iko-4Jn1D2Dp6NNNih63UO0",authDomain:"jsailing-f716c.firebaseapp.com",projectId:"jsailing-f716c",storageBucket:"jsailing-f716c.firebasestorage.app",messagingSenderId:"543523103696",appId:"1:543523103696:web:439a312efa6aec398a8fd5"});
+  const auth=getAuth(fbApp);
+  const ALLOWED='jacke.seilaa@gmail.com';
+  G('btnGoogleLogin').addEventListener('click',async()=>{
+    const p=new GoogleAuthProvider();
+    try{await signInWithPopup(auth,p);}
+    catch(e){
+      if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request'){
+        try{await signInWithRedirect(auth,p);}catch(e2){G('perr').textContent='Kirjautuminen epäonnistui: '+e2.message;}
+      } else {G('perr').textContent='Kirjautuminen epäonnistui: '+e.message;}
+    }
+  });
+  getRedirectResult(auth).catch(e=>{if(e&&e.code&&e.code!=='auth/no-current-user')G('perr').textContent='Virhe: '+e.message;});
+  onAuthStateChanged(auth,user=>{
+    if(user&&user.email===ALLOWED){
+      G('login').classList.add('gone');
+      loadCl();migrate();showDash();
+    } else if(user&&user.email!==ALLOWED){
+      signOut(auth);
+      G('perr').textContent='Pääsy estetty. Vain '+ALLOWED+' voi kirjautua.';
+    } else {
+      G('login').classList.remove('gone');
+    }
+  });
+  // Poistetaan logout-confirm, korvataan Firebase signOut:lla
+  window._fbAuth=auth; window._fbSignOut=signOut;
 }
-function tryLogin(){
-  const pin=[...document.querySelectorAll('.pbox')].map(x=>x.value).join('');
-  if(pin===PIN){
-    G('login').classList.add('gone');
-    loadCl();migrate();showDash();
-  } else {
-    G('perr').textContent='Väärä PIN-koodi.';
-    document.querySelectorAll('.pbox').forEach(x=>x.value='');
-    document.querySelector('.pbox').focus();
+function logout(){
+  if(confirm('Kirjaudu ulos?')){
+    if(window._fbSignOut&&window._fbAuth) window._fbSignOut(window._fbAuth).then(()=>location.reload());
+    else location.reload();
   }
 }
-function logout(){if(confirm('Kirjaudu ulos?'))location.reload();}
 
 // MIGRATE OLD DATA
 function migrate(){
@@ -817,7 +822,7 @@ function setupAutoSave(){
 
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
-  initPin();
+  initGoogleAuth();
   setupAutoSave();
   
   // Dashboard: klikki
